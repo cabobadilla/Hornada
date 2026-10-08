@@ -62,6 +62,17 @@ export default {
       return listarHornadas(url, env);
     }
 
+    // T-7 (HU-5): el panel del cocinero — sus pedidos, y solo los suyos (C-18).
+    if (request.method === 'GET' && url.pathname === '/api/cocineros/mi-panel') {
+      return miPanel(url, env);
+    }
+
+    // T-7 (HU-5): marcar un pedido entregado — persiste en D1 (C-19).
+    const entregado = url.pathname.match(/^\/api\/reservas\/([^/]+)\/entregado$/);
+    if (request.method === 'POST' && entregado) {
+      return marcarEntregado(request, env, decodeURIComponent(entregado[1]));
+    }
+
     return notFound();
   },
 };
@@ -355,4 +366,112 @@ async function reservar(request, env, hornadaId) {
     },
     201,
   );
+}
+
+// T-7 (HU-5, C-18): el panel lista las reservas de las hornadas del cocinero
+// autenticado por su token — jamás las de otro (cero datos ajenos, ningún id ajeno).
+// La segunda mitad de C-23 vive acá: una reserva de despacho viaja con su dirección.
+async function miPanel(url, env) {
+  const token = (url.searchParams.get('token') ?? '').trim();
+  if (!token) return json({ error: 'token_invalido' }, 403);
+
+  const cocinero = await env.DB.prepare(
+    `SELECT id, nombre, sector,
+            (SELECT COUNT(*) FROM resenas r WHERE r.cocinero_id = c.id) AS resenas,
+            (SELECT AVG(r.estrellas) FROM resenas r WHERE r.cocinero_id = c.id) AS promedio
+     FROM cocineros c WHERE token = ?1`,
+  )
+    .bind(token)
+    .first();
+  if (!cocinero) return json({ error: 'token_invalido' }, 403);
+
+  const hornadas = await env.DB.prepare(
+    `SELECT id, pan, desde, hasta, unidades, disponibles, estado
+     FROM hornadas WHERE cocinero_id = ?1
+     ORDER BY desde ASC`,
+  )
+    .bind(cocinero.id)
+    .all();
+
+  const reservas = await env.DB.prepare(
+    `SELECT id, hornada_id, nombre, contacto, unidades, modalidad, direccion, total, estado
+     FROM reservas WHERE hornada_id IN (
+       SELECT id FROM hornadas WHERE cocinero_id = ?1
+     )
+     ORDER BY creada_en ASC`,
+  )
+    .bind(cocinero.id)
+    .all();
+
+  const porHornada = new Map();
+  for (const r of reservas.results ?? []) {
+    if (!porHornada.has(r.hornada_id)) porHornada.set(r.hornada_id, []);
+    porHornada.get(r.hornada_id).push({
+      id: r.id,
+      nombre: r.nombre,
+      contacto: r.contacto,
+      unidades: r.unidades,
+      total: r.total,
+      modalidad: r.modalidad,
+      // C-23: dirección de entrega del despacho (el retiro no la tiene).
+      direccion: r.modalidad === 'despacho' ? r.direccion : null,
+      estado: r.estado,
+    });
+  }
+
+  return json({
+    cocinero: {
+      nombre: cocinero.nombre,
+      sector: cocinero.sector,
+      promedio: cocinero.promedio === null ? null : Number(cocinero.promedio),
+      resenas: cocinero.resenas,
+    },
+    hornadas: (hornadas.results ?? []).map((h) => ({
+      id: h.id,
+      pan: h.pan,
+      desde: h.desde,
+      hasta: h.hasta,
+      unidades: h.unidades,
+      disponibles: h.disponibles,
+      estado: h.estado,
+      reservas: porHornada.get(h.id) ?? [],
+    })),
+  });
+}
+
+// T-7 (HU-5, C-19): marcar entregado persiste — al reabrir el panel el pedido
+// sigue entregado. El estado vive en D1, no en la respuesta HTTP.
+async function marcarEntregado(request, env, reservaId) {
+  let datos = null;
+  try {
+    datos = await request.json();
+  } catch {
+    return json({ error: 'json_invalido' }, 400);
+  }
+  if (!datos || typeof datos !== 'object') {
+    return json({ error: 'json_invalido' }, 400);
+  }
+
+  const token = typeof datos.cocinero_token === 'string' ? datos.cocinero_token.trim() : '';
+  const cocinero = token
+    ? (await env.DB.prepare('SELECT id FROM cocineros WHERE token = ?').bind(token).first())
+    : null;
+  if (!cocinero) return json({ error: 'token_invalido' }, 403);
+
+  const fila = await env.DB.prepare(
+    `SELECT r.id, r.estado, h.cocinero_id
+     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
+     WHERE r.id = ?1`,
+  )
+    .bind(reservaId)
+    .first();
+  if (!fila) return notFound();
+
+  if (fila.cocinero_id !== cocinero.id) {
+    return json({ error: 'no_es_tu_reserva' }, 403);
+  }
+
+  await env.DB.prepare(`UPDATE reservas SET estado = 'entregada' WHERE id = ?`).bind(reservaId).run();
+
+  return json({ reserva: { id: fila.id, estado: 'entregada' } }, 200);
 }

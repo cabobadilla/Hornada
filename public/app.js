@@ -361,6 +361,111 @@ async function reservar() {
 
 async function main() {
   await Promise.all([cocinero(), miHornada(), listado(), reservar()]);
+  await panelCocinero();
+}
+
+// T-7 (HU-5): el panel del cocinero se abre con el token — por query string
+// (`/?token=…`) o por el que quedó guardado al registrarse. Lista sus hornadas
+// con sus reservas (C-18) y ofrece marcar entregado (C-19); un despacho muestra
+// su dirección de entrega (C-23).
+async function panelCocinero() {
+  const seccion = document.getElementById('panel-cocinero');
+  if (!seccion) return;
+
+  const mensaje = document.getElementById('mensaje-panel');
+  const contenido = document.getElementById('panel-cocinero-contenido');
+
+  const obtenerToken = () => {
+    const tokenUrl = new URLSearchParams(location.search).get('token');
+    if (tokenUrl && tokenUrl.trim()) return tokenUrl.trim();
+    return localStorage.getItem('hornada_token') || '';
+  };
+
+  const horario = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : d.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+  };
+
+  const render = (body) => {
+    contenido.textContent = '';
+    const hornadas = body?.hornadas ?? [];
+    hornadas.forEach((h) => {
+      const card = document.createElement('div');
+      card.className = 'panel-hornada';
+
+      const pan = document.createElement('p');
+      pan.className = 'hornada-pan';
+      pan.textContent = `${h.pan} · hasta ${horario(h.hasta)} · ${h.disponibles} sin reservar`;
+      card.appendChild(pan);
+
+      (h.reservas ?? []).forEach((r) => {
+        const fila = document.createElement('p');
+        fila.className = 'panel-reserva';
+        fila.textContent = `${r.nombre} · ${r.unidades} unid. · ${r.modalidad}${r.direccion ? ` · entrega: ${r.direccion}` : ''} · ${r.contacto} · ${r.estado}`;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'marcar-entregado';
+        btn.dataset.reserva = r.id;
+        btn.textContent = 'Marcar entregado';
+        btn.hidden = r.estado === 'entregada';
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          try {
+            const res = await fetch(`/api/reservas/${encodeURIComponent(r.id)}/entregado`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ cocinero_token: obtenerToken() }),
+            });
+            const bodyEntregado = await res.json();
+            if (res.status === 200) {
+              mensaje.textContent = 'Pedido entregado.';
+              cargar(obtenerToken());
+            } else if (bodyEntregado.error === 'token_invalido') {
+              mensaje.textContent = 'Tu token no es válido.';
+            } else if (bodyEntregado.error === 'no_es_tu_reserva') {
+              mensaje.textContent = 'Ese pedido no es de tus hornadas.';
+            } else {
+              mensaje.textContent = 'No se pudo marcar entregado — pruebe nuevamente.';
+            }
+          } catch {
+            mensaje.textContent = 'No se pudo marcar entregado — pruebe nuevamente.';
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+        fila.appendChild(btn);
+        card.appendChild(fila);
+      });
+
+      contenido.appendChild(card);
+    });
+    if (hornadas.length === 0) {
+      mensaje.textContent = 'Aún no tienes hornadas publicadas.';
+    }
+  };
+
+  const cargar = async (token) => {
+    try {
+      const res = await fetch(`/api/cocineros/mi-panel?token=${encodeURIComponent(token)}`);
+      const body = await res.json();
+      if (res.status === 200) {
+        render(body);
+      } else if (body?.error === 'token_invalido') {
+        mensaje.textContent = 'Tu token no es válido: regístrate de nuevo como cocinero.';
+      } else {
+        mensaje.textContent = 'No se pudo cargar tu panel — pruebe nuevamente.';
+      }
+    } catch {
+      mensaje.textContent = 'No se pudo cargar tu panel — pruebe nuevamente.';
+    }
+  };
+
+  const token = obtenerToken();
+  if (!token) return;
+  seccion.style.display = '';
+  await cargar(token);
 }
 
 main();

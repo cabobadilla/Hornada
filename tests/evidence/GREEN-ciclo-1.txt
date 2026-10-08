@@ -328,3 +328,28 @@ comando: node --test tests/t5-reservas.test.mjs
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 68436.18025
+
+# ============================================================
+# T-7 — el panel del cocinero (ciclo 1) · 2026-10-08 13:5x local
+# ============================================================
+# Comando   : node --test tests/   (sin flags, cwd del proyecto)
+# Resultado : 46 tests / 46 pass / 0 fail — 100%, 3 corridas seguidas
+# Cambios en verde: tests/t7-panel.test.mjs (7 casos)
+#   5 del encargo obligatorio + 2 extras. Ninguno omitido, ninguno debilitado.
+#
+#   C-18  panel de A lista su reserva con nombre/contacto/unidades
+#         → la fila de la reserva de B NO aparece (visitada una por una)
+#         · también: token ajeno/fantasma → 403 token_invalido (C-18b)
+#   C-19  POST /api/reservas/:id/entregado → 200 entregada
+#         · persistencia REAL: releo el panel y en D1 la reserva sigue entregada
+#         · reserva de otro cocinero → 403 no_es_tu_reserva, sigue reservada (C-19b)
+#   C-23  (segunda mitad, en el panel) reserva despacho → dirección visible
+#         con modalidad despacho en la fila del cocinero
+#   extras: 404 no_existe sin id de reserva · pantalla #panel-cocinero
+#         en el DOM real (Chrome headless) con botón marcar entregado
+# Serialización: abrirTurno/cerrarTurno (tests/lock.mjs) — un solo wrangler dev.
+# D1 : npx wrangler d1 execute hornada --local --json (una query por línea, sin
+#      SQL multilínea: d1() es execSync+shell y aparece plana en cada llamada).
+# Note: tests 46 = 39 previos + 7 de T-7 (44 decados era 39 + 3 + 2; los 2 extras
+# son el de 404 y el del DOM, y C-18b se partió del C-18 — todos a 200/falli-none).
+# ------------------------------------------------------------
