@@ -23,7 +23,7 @@
   .kpi b{font-size:21px; font-weight:600}
   .kpi span{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em}
   .barra{height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-top:18px}
-  .barra i{display:block; height:100%; background:var(--accent); width:0%}
+  .barra i{display:block; height:100%; background:var(--accent); width:10%}
   h2{font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
      margin:44px 0 6px; font-weight:600}
   .h2sub{color:var(--muted); font-size:13px; margin:0 0 16px; max-width:70ch}
@@ -105,11 +105,11 @@
     <h1>Hornada</h1>
     <p class="sub">Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.</p>
     <div class="meta">
-      <div class="kpi"><b>0%</b><span>Tareas del ciclo</span></div>
-      <div class="kpi"><b>0/10</b><span>Completadas</span></div>
+      <div class="kpi"><b>10%</b><span>Tareas del ciclo</span></div>
+      <div class="kpi"><b>1/10</b><span>Completadas</span></div>
       <div class="kpi"><b>Ciclo 1</b><span>Ciclo activo</span></div>
       <div class="kpi"><b>Etapa 1 · registro de cocineros + pedido de clientes</b><span>Alcance</span></div>
-      <div class="kpi"><b>Diseño cerrado — listo para despachar al Coder (fase 5)</b><span>Fase actual</span></div>
+      <div class="kpi"><b>Implementación — T-1 verificada por Hermes (G3 ✅)</b><span>Fase actual</span></div>
     </div>
     <div class="barra"><i></i></div>
   </header>
@@ -148,11 +148,11 @@
       
     </section></div>
 
-  <h2>Tareas del ciclo</h2><ul class="lista"><li class="wait">
-      <span class="tk-estado">○</span>
+  <h2>Tareas del ciclo</h2><ul class="lista"><li class="ok">
+      <span class="tk-estado">✓</span>
       <span class="tk-id">T-1</span>
       <span class="tk-titulo">El cocinero se registra</span>
-      <span class="tk-nota">C-01 · C-02 · C-03</span>
+      <span class="tk-nota">C-01 · C-02 · C-03 · sello INTACTOS · RED reproducido por aserción · 2 mutaciones muerden</span>
     </li><li class="wait">
       <span class="tk-estado">○</span>
       <span class="tk-id">T-2</span>
@@ -269,13 +269,13 @@
       </div>
   </div>
 
-  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
+  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
 
   
 
   <footer>
-    <p><strong>Siguiente:</strong> Correr el canario de capacidad del modelo y despachar T-1 (registro del cocinero) con TDD.</p>
-    <p>Actualizado 08-10-2026, 10:20 a. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
+    <p><strong>Siguiente:</strong> Despachar T-2 (publicar hornada), empezando por el fix del binding run_worker_first.</p>
+    <p>Actualizado 08-10-2026, 11:05 a. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
   </footer>
 
 </div>

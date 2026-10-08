@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T13:20:00Z",
+  "actualizado": "2026-10-08T14:05:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Diseño cerrado — listo para despachar al Coder (fase 5)",
-  "siguiente": "Correr el canario de capacidad del modelo y despachar T-1 (registro del cocinero) con TDD.",
+  "fase_actual": "Implementación — T-1 verificada por Hermes (G3 ✅)",
+  "siguiente": "Despachar T-2 (publicar hornada), empezando por el fix del binding run_worker_first.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 0,
+      "evaluado": 1,
       "rechazo": 0
     },
     "G4": {
@@ -89,8 +89,8 @@
     {
       "id": "T-1",
       "titulo": "El cocinero se registra",
-      "estado": "pendiente",
-      "nota": "C-01 · C-02 · C-03"
+      "estado": "listo",
+      "nota": "C-01 · C-02 · C-03 · sello INTACTOS · RED reproducido por aserción · 2 mutaciones muerden"
     },
     {
       "id": "T-2",
@@ -216,6 +216,14 @@
     {
       "id": "ADR-002",
       "nota": "D1 con UPDATE condicional: la base decide el cupo, no el Worker."
+    },
+    {
+      "id": "H-1",
+      "nota": "Hallazgo: run_worker_first está en la raíz de wrangler.jsonc y wrangler lo ignora (va dentro de assets). No rompe en local: los assets no matchean /api/* y el request cae al Worker. Fix en T-2."
+    },
+    {
+      "id": "H-2",
+      "nota": "Hallazgo de harness: verify-red es ciego si el worktree se crea DENTRO del proyecto (los helpers con rutas relativas escapan al árbol vivo y la suite 'pasa' en el commit de tests). El RED se reprodujo con el worktree fuera."
     }
   ],
   "diferido": [

@@ -64,7 +64,9 @@ dependencias de runtime.
 POST /api/cocineros
 Entrada: { nombre, sector, referencia_retiro, foto_url? }
 Salida:  201 { cocinero: { id, nombre, sector, token } }
-Errores: 400 { error: 'falta_nombre' | 'falta_sector' }   ← C-03
+Errores: 400 { error: 'falta_nombre' | 'falta_sector' | 'falta_referencia_retiro' | 'json_invalido' }   ← C-03
+         (los dos últimos los agregó la implementación de T-1 y el diseño los adopta: la
+          columna `referencia_retiro` es NOT NULL, así que validarla es correcta)
 
 GET /api/hornadas?sector=<texto>
 Salida:  200 { hornadas: [ { id, pan, desde, hasta, disponibles, precio,

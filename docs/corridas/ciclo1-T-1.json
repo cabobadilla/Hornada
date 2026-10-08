@@ -1,0 +1,27 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-1",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "ee6acf0 tests(T-1) en RED",
+    "b5a2d1a fix de infra de tests",
+    "a48d3f0 implementación",
+    "cfb0ecb evidencia GREEN"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo en el log de la corrida; no se estima (regla de §5).",
+  "verificacion_de_hermes": {
+    "canario": "3/3 condiciones — capaz de la tarea mínima",
+    "sello": "seal-from-commit b5a2d1a + verify → INTACTOS",
+    "red_reproducido": "7/7 fallan POR ASERCIÓN en b5a2d1a (worktree FUERA del proyecto; dentro, verify-red da falso verde)",
+    "verde": "7/7 en el árbol actual (node --test tests/)",
+    "mutacion": [
+      "quitar la validación de sector → C-03 rojo",
+      "persistir el sector mal → C-02 rojo"
+    ],
+    "review": "review.sh: consistente"
+  }
+}
