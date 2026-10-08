@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hornada — Quiero cocinar</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Hornada.</h1>
+    <p class="tagline">El pan de tu barrio, saliendo del horno.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="titulo-cocinar">
+      <h2 id="titulo-cocinar">Quiero cocinar.</h2>
+      <p>Tu horno ya está caliente: regístrate para que los vecinos de tu sector te encuentren.</p>
+
+      <form id="form-cocinero">
+        <label for="nombre">Nombre: tu nombre de cocinero.</label>
+        <input id="campo-nombre" name="nombre" type="text" autocomplete="name" placeholder="Lupe, el del pan de masa madre">
+
+        <label for="campo-sector">Sector: el barrio donde horneas.</label>
+        <input id="campo-sector" name="sector" type="text" placeholder="Chicureo – Piedra Roja">
+
+        <label for="campo-referencia-retiro">Referencia de retiro: dónde y cuándo te buscan el pan.</label>
+        <input id="campo-referencia-retiro" name="referencia_retiro" type="text" placeholder="Portón gris Calle 1, s/f y s/b, 8:00 a 20:00">
+
+        <label for="campo-foto-url">Foto (opcional): una imagen de tus piezas.</label>
+        <input id="campo-foto-url" name="foto_url" type="url" placeholder="https://...">
+
+        <button type="submit">Registrarme como cocinero</button>
+      </form>
+
+      <p id="mensaje-cocinero" class="mensaje" role="status"></p>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

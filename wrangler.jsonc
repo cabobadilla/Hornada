@@ -1,0 +1,20 @@
+{
+  // Hornada — forma C: assets estáticos + Worker + D1
+  "name": "hornada",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-10-08",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "run_worker_first": ["/api/*"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hornada",
+      // database_id de ejemplo: la base remota la crea Hermes al desplegar.
+      // En local (wrangler dev / d1 --local) no se usa.
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}
