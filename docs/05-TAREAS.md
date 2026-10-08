@@ -100,7 +100,7 @@ construir da un rojo que no significa nada.
 - **Casos que debe cubrir:** `C-22`, `C-23`, `C-24`
 - **Entrada:** T-5 (reserva funcionando) y las `modalidades` de la hornada
 - **Salida:** selector de modalidad en la pantalla de reserva, validación y campo condicional de dirección
-- **Test primero:** modalidad no ofrecida → 400 `modalidad_no_ofrecida`; despacho sin dirección → 400 `falta_direccion`; retiro → 201 con `donde === referencia_retiro`; el panel del cocinero muestra la dirección del despacho.
+- **Test primero:** modalidad no ofrecida → 400 `modalidad_no_ofrecida`; despacho sin dirección → 400 `falta_direccion`; retiro → 201 con `donde === referencia_retiro`; despacho → 201 y la dirección **quedó guardada** en la reserva (se relee por su `codigo`). Que el cocinero **vea** esa dirección es de T-7 (el panel): se verifica ahí, no acá.
 - **Criterio de terminado:** los 3 casos en verde; el formulario **no permite elegir** una modalidad que la hornada no ofrece.
 
 - [ ] Test escrito y fallando (RED) — evidencia:

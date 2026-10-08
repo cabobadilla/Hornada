@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T16:20:00Z",
+  "actualizado": "2026-10-08T17:00:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — T-5 verificada (sin sobreventa, sonda propia) pero la suite canónica está roja por la infraestructura de tests",
-  "siguiente": "T-5b (arreglar la infraestructura de la suite, sin tocar aserciones) y después T-6.",
+  "fase_actual": "Implementación — suite canónica verde (34/34, 3/3 corridas); T-6 en curso",
+  "siguiente": "T-6 (retiro o despacho) → T-7 (panel) → T-8 → T-9 → T-4 (forma) → T-10.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -119,7 +119,7 @@
     {
       "id": "T-6",
       "titulo": "Retiro o despacho",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-22 · C-23 · C-24"
     },
     {
@@ -145,6 +145,12 @@
       "titulo": "Cierre: suite completa",
       "estado": "pendiente",
       "nota": "no implementa nada"
+    },
+    {
+      "id": "T-5b",
+      "estado": "listo",
+      "nombre": "Arreglar la infraestructura de la suite (lock file: un solo dev server por vez)",
+      "nota": "34/34 con el comando canónico, 3/3 corridas · proceso correcto (tests en commits de tests) · helpers.mjs sellado intacto"
     }
   ],
   "historias": [
@@ -236,6 +242,10 @@
     {
       "id": "H-5",
       "nota": "La suite debe pasar con el comando canónico (node --test tests/), sin flags. Que pase solo serializada es un defecto de la infraestructura de tests, no del entregable."
+    },
+    {
+      "id": "H-6",
+      "nota": "C-23 mezclaba dos superficies: la validación (T-6) y que el cocinero VEA la dirección (panel, T-7). Se partió: T-6 valida y persiste; T-7 verifica que el panel la muestre. Una tarea no puede depender de una superficie que todavía no existe."
     }
   ],
   "diferido": [

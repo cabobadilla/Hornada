@@ -366,7 +366,7 @@ credenciales de plataforma.
 | `C-20` | El cliente ve su reserva y solo la suya | HU-6 / C-20 | comportamiento | `GET /api/reservas/:codigo` trae estado y `donde`; un código ajeno no devuelve esa reserva |
 | `C-21` | Una hornada cerrada no acepta reservas | HU-7 / C-21 | comportamiento | 409 `hornada_cerrada` sobre una hornada agotada o con `hasta` pasado |
 | `C-22` | El cliente solo elige modalidades ofrecidas | HU-8 / C-22 | comportamiento | hornada que solo ofrece `retiro` + reserva con `modalidad: 'despacho'` → 400 `modalidad_no_ofrecida` |
-| `C-23` | Despacho exige dirección y la muestra al cocinero | HU-8 / C-23 | comportamiento | sin `direccion` → 400 `falta_direccion`; con ella, el panel del cocinero la incluye |
+| `C-23` | Despacho exige dirección y la muestra al cocinero | HU-8 / C-23 | comportamiento | sin `direccion` → 400 `falta_direccion`; con ella, la reserva **guarda la dirección** (se relee por su `codigo`). La segunda mitad —que el cocinero la **vea**— se verifica en **T-7**, cuando exista el panel: es una superficie de T-7, no un observable de T-6 |
 | `C-24` | Retiro devuelve la referencia y no pide dirección | HU-8 / C-24 | comportamiento | reserva `retiro` → 201 con `donde === referencia_retiro` y sin exigir `direccion` |
 | `C-25` | Se califica una sola vez y solo con el pan entregado | HU-9 / C-25 | comportamiento | reserva `reservada` → 409 `reserva_no_entregada`; entregada → 201; repetir → 409 `ya_calificada` |
 | `C-26` | El promedio y la cantidad de reseñas salen en la tarjeta | HU-9 / C-26 | comportamiento | con 2 reseñas (5 y 4), la hornada trae `cocinero.promedio = 4.5` y `resenas = 2` |

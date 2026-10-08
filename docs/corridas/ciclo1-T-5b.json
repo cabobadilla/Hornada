@@ -1,0 +1,22 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-5b",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "ff33fe9 fix(tests): un solo wrangler dev por vez (lock file) — reemplaza la serialización rota",
+    "0c37f32 fix(tests): EX-17b, bug de scope del test",
+    "4c74474 evidencia: 3 corridas canónicas"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "proceso": "Correcto: los dos arreglos van en commits propios de tests; helpers.mjs (sellado) no se tocó.",
+  "verificacion_de_hermes": {
+    "sello": "re-anclado en 4c74474 → verify INTACTOS",
+    "aseriones": "diff de tests/ desde el ancla anterior: las ÚNICAS aserciones retiradas son las tres de EX-404 (retiro autorizado). Ninguna otra cambió, ninguna se debilitó. helpers.mjs intacto.",
+    "verde_canonico": "node --test tests/ (sin flags) 3/3 corridas: 34 / 34 / 0 pass-fail en las tres.",
+    "solucion": "lock file en .tmp/ (tests/lock.mjs, 306 líneas): turno exclusivo con openSync('wx'), robo solo si el dueño murió o lleva >25 min, y limpieza de huérfanos solo tras verificar ancestría de PID."
+  }
+}
