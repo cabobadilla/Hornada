@@ -1,0 +1,31 @@
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2050.188084ms)
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
+
+    - Unexpected fields found in top-level field: "run_worker_first"
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
+
+    - Unexpected fields found in top-level field: "run_worker_first"
+
+
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (924.891625ms)
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
+
+    - Unexpected fields found in top-level field: "run_worker_first"
+
+
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1810.678084ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.598375ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.777125ms)
+✔ EX-404 · rutas de API que aún no existen responden 404 JSON (2.207875ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (535.101542ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13913.132791
+exit=0
