@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T20:00:00Z",
+  "actualizado": "2026-10-08T21:00:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — 8 de 11 tareas; suite 49/49 tres veces · T-9 en curso",
-  "siguiente": "T-9 (reseñas y suspensión) → T-4 (forma, C-10…C-13) → T-10 (cierre y smoke contra la URL publicada).",
+  "fase_actual": "Implementación — 9 de 11 tareas; suite 56/56 · T-4 (forma) en curso",
+  "siguiente": "T-4 (forma del listado, medida por CDP) → T-10 (cierre: suite completa, smoke contra la URL publicada y casos ocultos).",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 8,
+      "evaluado": 9,
       "rechazo": 1
     },
     "G4": {
@@ -107,7 +107,7 @@
     {
       "id": "T-4",
       "titulo": "La forma del listado (medición)",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-10 · C-11 · C-12 · C-13 · va al final"
     },
     {
@@ -137,8 +137,8 @@
     {
       "id": "T-9",
       "titulo": "Reseñas y suspensión",
-      "estado": "en-curso",
-      "nota": "C-25 · C-26 · C-27 · C-28"
+      "estado": "listo",
+      "nota": "C-25 · C-26 · C-27 (con el borde) · C-28 + 1 extra · 56/56 canónico · promedio derivado en la lectura (sin columnas) · 2 mutaciones muerden, la del umbral 5→4 tumba el caso de borde"
     },
     {
       "id": "T-10",

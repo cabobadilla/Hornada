@@ -1,0 +1,26 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-9",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "9e5acc1 test(T-9) en ROJO (7 casos)",
+    "5f39335 test(T-9): guard de esquema por SQLITE_AUTH (tvf pragma_table_info no autorizada)",
+    "68b14cd test(T-9): subconsulta del propio test contaba por hornada.id en vez de cocinero_id",
+    "e2a8d26 implement(T-9): reseñas, promedio derivado, suspensión"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "proceso": "Correcto: los dos arreglos de su propio test fueron a commits de tests propios ANTES de la implementación; el commit de implementación no tocó ni un .mjs (diff vacío).",
+  "verificacion_de_hermes": {
+    "sello": "seal-from-commit 68b14cd + verify → INTACTOS",
+    "verde_canonico": "node --test tests/ (sin flags) 2/2 corridas mías: 56 / 56 / 0",
+    "mutacion": [
+      "el listado no oculta al suspendido → C-27a rojo",
+      "umbral 5 → 4 → C-27a Y C-27b rojos (el borde declarado se mide de verdad, no se asume)"
+    ],
+    "promedio_derivado": "el test verifica además que NO existan columnas de promedio ni de suspensión en el esquema: la regla se evalúa en la lectura."
+  }
+}
