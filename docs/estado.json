@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T15:30:00Z",
+  "actualizado": "2026-10-08T16:20:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — T-3 aceptada CON DESVIACIÓN documentada; T-5 en curso",
-  "siguiente": "T-5 (reservar sin sobreventa) + retiro del caso superado EX-404 en un commit de tests.",
+  "fase_actual": "Implementación — T-5 verificada (sin sobreventa, sonda propia) pero la suite canónica está roja por la infraestructura de tests",
+  "siguiente": "T-5b (arreglar la infraestructura de la suite, sin tocar aserciones) y después T-6.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 3,
+      "evaluado": 4,
       "rechazo": 1
     },
     "G4": {
@@ -113,8 +113,8 @@
     {
       "id": "T-5",
       "titulo": "Reservar sin sobreventa",
-      "estado": "en-curso",
-      "nota": "C-14 · C-15 · C-16 · C-17 · C-21 + retiro de EX-404 (superado por C-08)"
+      "estado": "listo",
+      "nota": "C-14 · C-15 · C-16 · C-17 · C-21 · UPDATE condicional verificado con sonda propia de 8 reservas simultáneas (1 gana, 0 sobreventa) · 2 mutaciones muerden · PENDIENTE: la suite canónica falla por infraestructura de tests (4 archivos pelean el puerto 8787) y por un bug del test EX-17b"
     },
     {
       "id": "T-6",
@@ -232,6 +232,10 @@
     {
       "id": "H-4",
       "nota": "Un caso extra no puede afirmar la AUSENCIA de una funcionalidad que la matriz del mismo ciclo declara: EX-404 quedó superado por C-08 y se retira."
+    },
+    {
+      "id": "H-5",
+      "nota": "La suite debe pasar con el comando canónico (node --test tests/), sin flags. Que pase solo serializada es un defecto de la infraestructura de tests, no del entregable."
     }
   ],
   "diferido": [

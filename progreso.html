@@ -23,7 +23,7 @@
   .kpi b{font-size:21px; font-weight:600}
   .kpi span{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em}
   .barra{height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-top:18px}
-  .barra i{display:block; height:100%; background:var(--accent); width:30%}
+  .barra i{display:block; height:100%; background:var(--accent); width:40%}
   h2{font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
      margin:44px 0 6px; font-weight:600}
   .h2sub{color:var(--muted); font-size:13px; margin:0 0 16px; max-width:70ch}
@@ -105,11 +105,11 @@
     <h1>Hornada</h1>
     <p class="sub">Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.</p>
     <div class="meta">
-      <div class="kpi"><b>30%</b><span>Tareas del ciclo</span></div>
-      <div class="kpi"><b>3/10</b><span>Completadas</span></div>
+      <div class="kpi"><b>40%</b><span>Tareas del ciclo</span></div>
+      <div class="kpi"><b>4/10</b><span>Completadas</span></div>
       <div class="kpi"><b>Ciclo 1</b><span>Ciclo activo</span></div>
       <div class="kpi"><b>Etapa 1 · registro de cocineros + pedido de clientes</b><span>Alcance</span></div>
-      <div class="kpi"><b>Implementación — T-3 aceptada CON DESVIACIÓN documentada; T-5 en curso</b><span>Fase actual</span></div>
+      <div class="kpi"><b>Implementación — T-5 verificada (sin sobreventa, sonda propia) pero la suite canónica está roja por la infraestructura de tests</b><span>Fase actual</span></div>
     </div>
     <div class="barra"><i></i></div>
   </header>
@@ -168,11 +168,11 @@
       <span class="tk-id">T-4</span>
       <span class="tk-titulo">La forma del listado (medición)</span>
       <span class="tk-nota">C-10 · C-11 · C-12 · C-13 · va al final</span>
-    </li><li class="run">
-      <span class="tk-estado">◐</span>
+    </li><li class="ok">
+      <span class="tk-estado">✓</span>
       <span class="tk-id">T-5</span>
       <span class="tk-titulo">Reservar sin sobreventa</span>
-      <span class="tk-nota">C-14 · C-15 · C-16 · C-17 · C-21 + retiro de EX-404 (superado por C-08)</span>
+      <span class="tk-nota">C-14 · C-15 · C-16 · C-17 · C-21 · UPDATE condicional verificado con sonda propia de 8 reservas simultáneas (1 gana, 0 sobreventa) · 2 mutaciones muerden · PENDIENTE: la suite canónica falla por infraestructura de tests (4 archivos pelean el puerto 8787) y por un bug del test EX-17b</span>
     </li><li class="wait">
       <span class="tk-estado">○</span>
       <span class="tk-id">T-6</span>
@@ -269,13 +269,13 @@
       </div>
   </div>
 
-  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
+  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
 
   
 
   <footer>
-    <p><strong>Siguiente:</strong> T-5 (reservar sin sobreventa) + retiro del caso superado EX-404 en un commit de tests.</p>
-    <p>Actualizado 08-10-2026, 12:30 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
+    <p><strong>Siguiente:</strong> T-5b (arreglar la infraestructura de la suite, sin tocar aserciones) y después T-6.</p>
+    <p>Actualizado 08-10-2026, 1:20 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
   </footer>
 
 </div>

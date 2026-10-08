@@ -1,0 +1,29 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-5",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa_con_defecto_de_suite",
+  "commits": [
+    "d41acc7 test: retiro de EX-404 (superado por C-08)",
+    "c7153b1 test(T-5) en ROJO",
+    "0b3fdee POST /api/hornadas/:id/reservas (UPDATE condicional) + pantalla",
+    "d793a59 evidencia"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "proceso": "Correcto: retiro y tests en commits propios de tests; la implementación no tocó tests/ ni docs/.",
+  "verificacion_de_hermes": {
+    "sello": "verify → INTACTOS (los tests cambiaron solo en sus commits de tests)",
+    "verde_canonico": "node --test tests/ → 34 · 28 pass · 6 fail. node --test --test-concurrency=1 tests/ → 33/34: el único rojo es el bug del propio test EX-17b.",
+    "diagnostico": "Los 5 rojos de la corrida paralela NO son de la implementación: 4 archivos arrancan wrangler dev en el puerto 8787 a la vez porque la serialización de los tests nunca detecta suites vecinas (RAIZ termina en '/' y el cwd de lsof no), y el 'matar huérfano' de t5 mata al server de una suite viva.",
+    "red_reproducido": "los tests de T-5 contra el estado previo: 8/9 rojos por aserción",
+    "mutacion": [
+      "UPDATE sin 'AND disponibles >= ?2' → C-15 rojo (sobreventa posible)",
+      "'hornada_cerrada' renombrado a 'sin_cupo' → C-21 rojo"
+    ],
+    "sonda_de_concurrencia_propia": "8 POST simultáneos por la última unidad → 1×201, 7×409, disponibles 0, estado cerrada y fuera del listado. SIN SOBREVENTA. (.tmp/sonda-concurrencia.mjs)",
+    "afirmacion_no_verificable": "Su informe menciona procesos vivos de 'tests/ciclo2-t12.test.mjs' con cwd fuera del repo: ese archivo no existe en el disco. La reconstrucción de la línea de tiempo tiene ese detalle inventado (el diagnóstico de fondo, en cambio, se reprodujo)."
+  }
+}
