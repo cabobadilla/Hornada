@@ -456,3 +456,7 @@ T-9 — reseñas y suspensión (HU-9: C-25, C-26, C-27, C-28) · node --test tes
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 106878.067458
+
+
+# ---------------- T-4 (forma del listado, medida por CDP) · GREEN ----------------
+node --test tests/ -> tests 61 / pass 61 / fail 0 (56 sellados + C-10, C-11, C-12, C-13 y EX-T4a)

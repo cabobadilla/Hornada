@@ -67,6 +67,11 @@ h2 { margin-top: 0; }
   gap: 12px;
 }
 
+.card-hornada button {
+  display: block;
+  width: 100%;
+}
+
 #lista-hornadas[hidden] { display: none; }
 
 .chip-cupo {
