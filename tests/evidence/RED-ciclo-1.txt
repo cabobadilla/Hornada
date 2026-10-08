@@ -121,3 +121,190 @@ test at tests/ciclo-1.test.mjs:116:1
     diff: 'simple'
   }
 exit=1
+
+
+== T-2 · RED (corrida completa `node --test tests/`, commit de tests) ==
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2051.511667ms)
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (899.948667ms)
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1785.602875ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.369875ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.652834ms)
+✔ EX-404 · rutas de API que aún no existen responden 404 JSON (1.884208ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (533.030958ms)
+✖ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (16426.57875ms)
+✖ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (8.186167ms)
+✖ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (3.788875ms)
+✖ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (915.389541ms)
+✖ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (903.416292ms)
+✖ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (892.349584ms)
+✖ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (893.56325ms)
+✖ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (4.364583ms)
+✖ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (897.078167ms)
+✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (1.468666ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 8
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24179.65
+
+✖ failing tests:
+
+test at tests/t2-hornadas.test.mjs:92:1
+✖ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (16426.57875ms)
+  AssertionError [ERR_ASSERTION]: C-04 · debe existir #form-hornada en el DOM servido, no lo hay
+      at file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:117:12
+      at async withBrowser (file:///Users/christianbobadilla/CodeLab/Hornada/tests/helpers.mjs:173:12)
+      at async TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:94:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:132:1
+✖ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (8.186167ms)
+  AssertionError [ERR_ASSERTION]: C-05 · esperaba 201, llegó 404
+  
+  404 !== 201
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:138:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 201,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:173:1
+✖ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (3.788875ms)
+  AssertionError [ERR_ASSERTION]: C-06 · la primera hornada debe publicarse, llegó 404
+  
+  404 !== 201
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:178:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 201,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:192:1
+✖ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (915.389541ms)
+  AssertionError [ERR_ASSERTION]: C-07 · unidades 0 esperaba 400, llegó 404
+  
+  404 !== 400
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:201:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:215:1
+✖ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (903.416292ms)
+  AssertionError [ERR_ASSERTION]: EX-05a · esperaba 403, llegó 404
+  
+  404 !== 403
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:219:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:225:1
+✖ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (892.349584ms)
+  AssertionError [ERR_ASSERTION]: EX-05b · sin pan esperaba 400, llegó 404
+  
+  404 !== 400
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:233:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:246:1
+✖ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (893.56325ms)
+  AssertionError [ERR_ASSERTION]: EX-05c · modalidades [] esperaba 400, llegó 404
+  
+  404 !== 400
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:254:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:267:1
+✖ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (4.364583ms)
+  AssertionError [ERR_ASSERTION]: EX-06a · precondición: publicar la primera hornada
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:272:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/t2-hornadas.test.mjs:285:1
+✖ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (897.078167ms)
+  AssertionError [ERR_ASSERTION]: EX-07a · precio 1500.5 esperaba 400, llegó 404
+  
+  404 !== 400
+  
+      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/t2-hornadas.test.mjs:291:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 404,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

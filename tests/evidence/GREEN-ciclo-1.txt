@@ -29,3 +29,31 @@
 ℹ todo 0
 ℹ duration_ms 13913.132791
 exit=0
+
+
+== T-2 · GREEN (corrida completa `node --test tests/`, 17/17) ==
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2058.332167ms)
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (922.031292ms)
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1801.845ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.412333ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.634ms)
+✔ EX-404 · rutas de API que aún no existen responden 404 JSON (1.946875ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (536.969417ms)
+✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (16401.548834ms)
+✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (912.510667ms)
+✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (900.074292ms)
+✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1792.47225ms)
+✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1818.200042ms)
+✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1786.291542ms)
+✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1796.017041ms)
+✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (916.224042ms)
+✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1788.799042ms)
+✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.450917ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28399.656209
