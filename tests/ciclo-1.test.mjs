@@ -1,9 +1,15 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startServer, stopServer, serverReady, api, apiJson, d1, withBrowser, BASE } from './helpers.mjs';
+import { abrirTurno, cerrarTurno } from './lock.mjs';
 
-before(startServer);
-after(stopServer);
+// T-5b: esta suite arranca wrangler dev en 8787 como las demás; el turno exclusivo
+// (lock file en .tmp/, un solo dev server por vez) lo garantiza abrirTurno/cerrarTurno.
+before(() => abrirTurno('ciclo-1.test.mjs'));
+after(() => {
+  stopServer();
+  cerrarTurno();
+});
 
 let nombre1 = null;
 let sector1 = null;

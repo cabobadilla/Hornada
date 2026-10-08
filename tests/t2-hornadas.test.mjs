@@ -1,58 +1,18 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { execSync } from 'node:child_process';
 import { startServer, stopServer, serverReady, api, apiJson, d1, withBrowser, BASE } from './helpers.mjs';
+import { abrirTurno, cerrarTurno } from './lock.mjs';
 
-// --- serialización propia de este archivo (helpers.mjs sellado no se toca) ---
-// `node --test tests/` corre cada archivo en un proceso hijo y todos en paralelo:
-// comparten puerto 8787, perfil de Chrome y la misma D1; C-03 de la suite sellada
-// cuenta filas globales y se rompería con escrituras concurrentes. Solo este
-// archivo espera: no arranca hasta que ningún otro .test.mjs de ESTE proyecto
-// esté vivo (los hijos del runner terminan en `tests/<x>.test.mjs`).
-const ESTE_ARCHIVO = 't2-hornadas.test.mjs';
-const RAIZ = new globalThis.URL('..', import.meta.url).pathname;
-
-function cwdDe(pid) {
-  try {
-    const out = execSync(`lsof -a -p ${pid} -d cwd -Fn 2>/dev/null || true`, { encoding: 'utf8' });
-    const hit = out.split('\n').find((l) => l.startsWith('n'));
-    return hit ? hit.slice(1) : '';
-  } catch {
-    return '';
-  }
-}
-
-function otraSuiteViva() {
-  for (const linea of execSync('ps -axo pid=,command=', { encoding: 'utf8' }).split('\n')) {
-    const m = linea.match(/^ *\d+ +(.*)$/);
-    if (!m) continue;
-    const arch = m[1].match(/tests\/([A-Za-z0-9._-]+\.test\.mjs)\s*$/);
-    if (!arch || arch[1] === ESTE_ARCHIVO) continue;
-    const pid = Number(linea.match(/^ *\d+/)[0]);
-    const cwd = cwdDe(pid);
-    if (cwd && cwd.startsWith(RAIZ)) return arch[1];
-  }
-  return null;
-}
-
-before(async () => {
-  // Fase 1 · ventanal de 10 s: si una suite vecina aparece, se marca y se espera.
-  // (los hijos del runner no nacen instantáneos; en t=0 puede no haber ninguno)
-  let visto = null;
-  for (let i = 0; i < 20 && !visto; i++) {
-    visto = otraSuiteViva();
-    if (visto) break;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  // Fase 2 · tope de 20 min: si una suite vecina no termina, se corre igual y los
-  // fallos cuentan su propia historia (quick-fail por ECONNREFUSED, no falso verde).
-  for (let i = 0; visto && i < 2400; i++) {
-    if (!otraSuiteViva()) break;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  await startServer();
+// T-5b: la serialización por ps/lsof de este archivo era inerte (el guard
+// `cwd.startsWith(RAIZ)` era siempre falso: RAIZ termina en `/` y el cwd que
+// devuelve lsof no — corrida-T5.log, BLOQUEOS). Se reemplaza por el turno
+// exclusivo común (lock file en .tmp/): un solo wrangler dev por vez, sin tocar
+// tests/helpers.mjs (sellado) ni una sola aserción.
+before(() => abrirTurno('t2-hornadas.test.mjs'));
+after(() => {
+  stopServer();
+  cerrarTurno();
 });
-after(stopServer);
 
 // ---- casos: la hornada válida de referencia ----
 const HORNO = `mariposa-${Date.now()}`;

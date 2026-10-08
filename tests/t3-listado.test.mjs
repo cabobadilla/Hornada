@@ -3,101 +3,22 @@ import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { startServer, stopServer, serverReady, api, apiJson, d1, withBrowser, BASE } from './helpers.mjs';
+import { abrirTurno, cerrarTurno } from './lock.mjs';
 
-// --- serialización propia de este archivo (helpers.mjs sellado no se toca) ---
-// `node --test tests/` corre cada archivo en un proceso hijo y todos en paralelo:
-// comparten puerto 8787, perfil de Chrome y la misma D1; los tests sellados (C-03)
-// cuentan filas globales y se romperían con escrituras concurrentes. Igual que
-// t2-hornadas.test.mjs, este archivo espera: no arranca hasta que ningún otro
-// .test.mjs de ESTE proyecto esté vivo (los hijos del runner terminan en
-// `tests/<x>.test.mjs`).
-const ESTE_ARCHIVO = 't3-listado.test.mjs';
-const RAIZ = new globalThis.URL('..', import.meta.url).pathname;
+// T-5b: la serialización por ps/lsof era inerte (el guard `cwd.startsWith(RAIZ)`
+// era siempre falso: RAIZ terminaba en `/` y el cwd que devuelve lsof no —
+// corrida-T5.log, BLOQUEOS) y, con la suite de turno, `matarServerHuerfano` podía
+// matar el server de una suite viva. Se reemplaza por el turno exclusivo común
+// (lock file en .tmp/): un solo wrangler dev por vez, sin tocar helpers.mjs
+// (sellado) y sin cambiar una sola aserción de este archivo.
+// RAIZ (sin barra final) queda para d1Lote, que la usa como cwd de wrangler.
+const RAIZ = new URL('../', import.meta.url).pathname.replace(/\/+$/, '');
 
-function cwdDe(pid) {
-  try {
-    const out = execSync(`lsof -a -p ${pid} -d cwd -Fn 2>/dev/null || true`, { encoding: 'utf8' });
-    const hit = out.split('\n').find((l) => l.startsWith('n'));
-    return hit ? hit.slice(1) : '';
-  } catch {
-    return '';
-  }
-}
-
-function otraSuiteViva() {
-  for (const linea of execSync('ps -axo pid=,command=', { encoding: 'utf8' }).split('\n')) {
-    const m = linea.match(/^ *\d+ +(.*)$/);
-    if (!m) continue;
-    const arch = m[1].match(/tests\/([A-Za-z0-9._-]+\.test\.mjs)\s*$/);
-    if (!arch || arch[1] === ESTE_ARCHIVO) continue;
-    const pid = Number(linea.match(/^ *\d+/)[0]);
-    const cwd = cwdDe(pid);
-    if (cwd && cwd.startsWith(RAIZ)) return arch[1];
-  }
-  return null;
-}
-
-before(async () => {
-  // Serialización robusta (helpers.mjs sellado no se toca). Punto débil del
-  // esquema "todos esperamos": al morir la suite no-esperadora, las suites
-  // esperadoras despertamos JUNTAS y compartimos el workerd de quien gane el
-  // puerto (el otro crée que el.server ajeno es el suyo; al terminarse aquel,
-  // ECONNREFUSED). Acá el despertar es en tres fases:
-  //   1. esperar a que no haya ninguna suite vecina viva (cap 20 min);
-  //   2. gracia de 15 s sondeando cada 250 ms: si reaparece un vecino o el
-  //      puerto 8787 pasa a estar ocupado, se vuelve a esperar;
-  //   3. en estado callado, matar cualquier server huérfano en 8787
-  //      (restos de una corrida interrumpida) y recién entonces arrancar.
-  for (let ronda = 0; ronda < 2900; ronda++) {
-    const vecina = otraSuiteViva();
-    if (!vecina) {
-      let callado = true;
-      for (let i = 0; i < 60; i++) {
-        if (otraSuiteViva()) { callado = false; break; }
-        if (i % 4 === 0 && !(await puertoLibre())) { callado = false; break; }
-        await new Promise((r) => setTimeout(r, 250));
-      }
-      if (callado) break;
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  matarServerHuerfano();
-  await startServer();
+before(() => abrirTurno('t3-listado.test.mjs'));
+after(() => {
+  stopServer();
+  cerrarTurno();
 });
-after(stopServer);
-
-async function puertoLibre() {
-  try {
-    await fetch(`${BASE}/`, { signal: AbortSignal.timeout(800) });
-    return false;
-  } catch (e) {
-    return e?.cause?.code === 'ECONNREFUSED';
-  }
-}
-
-function matarServerHuerfano() {
-  let out = '';
-  try {
-    out = execSync('lsof -t -iTCP:8787 -sTCP:LISTEN 2>/dev/null || true', { encoding: 'utf8' });
-  } catch {
-    return;
-  }
-  const pids = out.split('\n').map((s) => parseInt(s, 10)).filter(Boolean);
-  for (const pid of pids) {
-    try { process.kill(pid, 'SIGTERM'); } catch {}
-  }
-  // da 3 s a que se retiren; si siguen, SIGKILL
-  const alive = () =>
-    out.split('\n').map((s) => parseInt(s, 10)).filter(Boolean).filter((pid) => {
-      try { process.kill(pid, 0); return true; } catch { return false; }
-    });
-  for (let i = 0; i < 6 && alive().length > 0; i++) {
-    execSync('sleep 0.5');
-  }
-  for (const pid of alive()) {
-    try { process.kill(pid, 'SIGKILL'); } catch {}
-  }
-}
 
 // ---- helpers propios de T-3 (los helpers sellados no se tocan) ----
 

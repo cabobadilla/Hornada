@@ -3,152 +3,26 @@ import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { startServer, stopServer, serverReady, apiJson, d1, withBrowser, BASE } from './helpers.mjs';
+import { abrirTurno, cerrarTurno } from './lock.mjs';
 
-// --- serialización propia de este archivo (helpers.mjs sellado no se toca) ---
-// Igual que t3-listado.test.mjs: `node --test tests/` corre cada archivo en un
-// proceso hijo, todos en paralelo, compartiendo puerto 8787, perfil de Chrome y
-// la misma D1 local. Este archivo copia ese patrón adaptado para convivir con
-// t3 SIN interbloqueo: t3 espera mientras *cualquier* otra suite (esta incluida)
-// esté viva, así que mientras nuestro proceso exista, t3 nunca toma el puerto.
-// Por eso acá la regla asimétrica es:
-//   1. esperar a que no haya suites de arranque inmediato (todo archivo vivo
-//      distinto de t3 y de este) — igual que t3 espera a las suyas;
-//   2. si t3 sigue viva: con el puerto libre está esperándonos (ventana de
-//      gracia estable y tomamos el turno; t3 verá la suite viva y seguirá
-//      esperando); con el puerto ocupado, el dueño solo puede ser t3 testeando
-//      (spawn tardío) o un huérfano de una corrida previa: se verifica por
-//      ancestría de PIDs antes de matar algo.
-const ESTE_ARCHIVO = 't5-reservas.test.mjs';
-const ARCHIVO_T3 = 't3-listado.test.mjs';
-const RAIZ = new globalThis.URL('..', import.meta.url).pathname;
+// T-5b: la serialización por ps/lsof de este archivo tenía dos defectos medidos
+// (corrida-T5.log, BLOQUEOS): (1) el guard `cwd.startsWith(RAIZ)` era siempre
+// falso (RAIZ terminaba en `/` y el cwd que devuelve lsof no), con lo que
+// `suitesVivas()` veía siempre cero suites vecinas; (2) con esa lista vacía,
+// `pidHuerfanoEn8787` consideraba huérfano a CUALQUIER listener de 8787 y
+// `matarHuerfano` mataba el server de una suite viva (así murió su propia
+// corrida). Se reemplaza ese mecanismo por el turno exclusivo común (lock file
+// en .tmp/, tests/lock.mjs): un solo wrangler dev por vez; el server ajeno no se
+// mira, no se adopta y no se mata. Sin tocar helpers.mjs (sellado) y sin
+// cambiar una sola aserción.
+// RAIZ (sin barra final) queda para d1Lote, que la usa como cwd de wrangler.
+const RAIZ = new URL('../', import.meta.url).pathname.replace(/\/+$/, '');
 
-function suitesVivas({ incluirT3 = true } = {}) {
-  const vivas = [];
-  for (const linea of execSync('ps -axo pid=,command=', { encoding: 'utf8' }).split('\n')) {
-    const m = linea.match(/^ *\d+ +(.*)$/);
-    if (!m) continue;
-    const arch = m[1].match(/tests\/([A-Za-z0-9._-]+\.test\.mjs)\s*$/);
-    if (!arch || arch[1] === ESTE_ARCHIVO) continue;
-    if (!incluirT3 && arch[1] === ARCHIVO_T3) continue;
-    vivas.push({ archivo: arch[1], pid: Number(linea.match(/^ *\d+/)[0]) });
-  }
-  return vivas.filter(({ pid }) => cwdDe(pid).startsWith(RAIZ));
-}
-
-function cwdDe(pid) {
-  try {
-    const out = execSync(`lsof -a -p ${pid} -d cwd -Fn 2>/dev/null || true`, { encoding: 'utf8' });
-    const hit = out.split('\n').find((l) => l.startsWith('n'));
-    return hit ? hit.slice(1) : '';
-  } catch {
-    return '';
-  }
-}
-
-function suiteViva(archivo) {
-  return suitesVivas().some((s) => s.archivo === archivo);
-}
-
-async function puertoLibre() {
-  try {
-    await fetch(`${BASE}/`, { signal: AbortSignal.timeout(800) });
-    return false;
-  } catch (e) {
-    return e?.cause?.code === 'ECONNREFUSED';
-  }
-}
-
-function ancestriaIncluye(pid, buscado) {
-  let actual = pid;
-  for (let i = 0; i < 10 && actual; i++) {
-    if (actual === buscado) return true;
-    let out = '';
-    try {
-      out = execSync(`ps -o ppid= -p ${actual}`, { encoding: 'utf8' }).trim();
-    } catch {
-      return false;
-    }
-    const ppid = parseInt(out, 10);
-    if (!ppid || ppid <= 1) return false;
-    actual = ppid;
-  }
-  return false;
-}
-
-// El pid que escucha en 8787, SOLO si ninguna suite viva de este proyecto lo
-// tiene en su ancestría (es un huérfano de una corrida interrumpida).
-function pidHuerfanoEn8787() {
-  let out = '';
-  try {
-    out = execSync('lsof -t -iTCP:8787 -sTCP:LISTEN 2>/dev/null || true', { encoding: 'utf8' });
-  } catch {
-    return null;
-  }
-  const pids = out.split('\n').map((s) => parseInt(s, 10)).filter(Boolean);
-  if (pids.length === 0) return null;
-  const vivas = suitesVivas();
-  for (const pid of pids) {
-    if (vivas.some(({ pid: suite }) => ancestriaIncluye(pid, suite))) return null;
-  }
-  return pids[0];
-}
-
-function matarHuerfano() {
-  const pid = pidHuerfanoEn8787();
-  if (!pid) return;
-  try { process.kill(pid, 'SIGTERM'); } catch { return; }
-  for (let i = 0; i < 6; i++) {
-    let vivo = false;
-    try { process.kill(pid, 0); vivo = true; } catch {}
-    if (!vivo) return;
-    execSync('sleep 0.5');
-  }
-  try { process.kill(pid, 'SIGKILL'); } catch {}
-}
-
-before(async () => {
-  const limite = Date.now() + 20 * 60 * 1000;
-
-  // Fase 1: esperar a las suites de arranque inmediato (todo menos t3 y este).
-  while (Date.now() < limite && suitesVivas({ incluirT3: false }).length > 0) {
-    await new Promise((r) => setTimeout(r, 500));
-  }
-
-  // Fase 2: turno propio, componiendo con t3 (ver comentario de arriba).
-  while (Date.now() < limite) {
-    if (suitesVivas({ incluirT3: false }).length > 0) {
-      await new Promise((r) => setTimeout(r, 500));
-      continue;
-    }
-    if (await puertoLibre()) {
-      if (!suiteViva(ARCHIVO_T3)) break;
-      // t3 viva + puerto libre: está esperándonos. Gracia de 15 s sondeando:
-      // si reaparece una suite de arranque inmediato o el puerto se ocupa,
-      // se vuelve a esperar; t3 no puede tomar el puerto mientras existimos.
-      let estable = true;
-      for (let i = 0; i < 60; i++) {
-        if (suitesVivas({ incluirT3: false }).length > 0 || !(await puertoLibre())) {
-          estable = false;
-          break;
-        }
-        await new Promise((r) => setTimeout(r, 250));
-      }
-      if (estable) break;
-      continue;
-    }
-    const huerfano = pidHuerfanoEn8787();
-    if (huerfano) {
-      matarHuerfano();
-      continue;
-    }
-    // El puerto tiene un dueño vivo: solo puede ser t3 testeando (spawn
-    // tardío). Esperar a que su suite termine y retome el puerto libre.
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  matarHuerfano();
-  await startServer();
+before(() => abrirTurno('t5-reservas.test.mjs'));
+after(() => {
+  stopServer();
+  cerrarTurno();
 });
-after(stopServer);
 
 // ---- helpers propios de T-5 (los helpers sellados no se tocan) ----
 
