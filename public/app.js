@@ -116,8 +116,99 @@ async function miHornada() {
   });
 }
 
+async function listado() {
+  const form = document.getElementById('form-listado');
+  if (!form) return;
+
+  const lista = document.getElementById('lista-hornadas');
+  const vacio = document.getElementById('estado-vacio');
+  const mensaje = document.getElementById('mensaje-listado');
+  const campoSector = document.getElementById('campo-sector-listado');
+
+  const horario = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : d.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+  };
+
+  const tarjeta = (h) => {
+    const card = document.createElement('li');
+    card.id = `card-hornada-${h.id}`;
+    card.className = 'card-hornada';
+
+    const chip = document.createElement('span');
+    chip.className = 'chip-cupo';
+    chip.textContent = `${h.disponibles} disponibles`;
+
+    const pan = document.createElement('h3');
+    pan.className = 'hornada-pan';
+    pan.textContent = h.pan;
+
+    const cocineroL = document.createElement('p');
+    cocineroL.className = 'hornada-cocinero';
+    const calificacion = h.cocinero?.promedio != null ? ` · ★ ${h.cocinero.promedio} (${h.cocinero.resenas})` : '';
+    cocineroL.textContent = h.cocinero ? `Pan por ${h.cocinero.nombre}${calificacion}` : '';
+
+    const meta = document.createElement('p');
+    meta.className = 'hornada-meta';
+    meta.textContent = `Sale del horno ${horario(h.desde)} · retiro hasta ${horario(h.hasta)} · ${(h.modalidades || []).join(' y ')}: ${h.referencia_retiro}`;
+
+    const precio = document.createElement('p');
+    precio.className = 'hornada-precio';
+    precio.textContent = `$${h.precio} por unidad`;
+
+    card.appendChild(chip);
+    card.appendChild(pan);
+    card.appendChild(cocineroL);
+    card.appendChild(meta);
+    card.appendChild(precio);
+    return card;
+  };
+
+  const pinta = (hornadas) => {
+    lista.textContent = '';
+    if (Array.isArray(hornadas) && hornadas.length > 0) {
+      vacio.hidden = true;
+      lista.hidden = false;
+      for (const h of hornadas) lista.appendChild(tarjeta(h));
+    } else {
+      vacio.hidden = false;
+      lista.hidden = true;
+    }
+  };
+
+  async function buscar(sector) {
+    try {
+      const res = await fetch(`/api/hornadas?sector=${encodeURIComponent(sector)}`);
+      const body = await res.json();
+      mensaje.textContent = '';
+      pinta(body?.hornadas);
+    } catch {
+      mensaje.textContent = 'No se pudo ver el listado de tu sector — pruebe nuevamente.';
+    }
+  }
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const sector = campoSector.value.trim();
+    if (!sector) {
+      mensaje.textContent = 'Te falta tu sector: probé con tu barrio.';
+      campoSector.focus();
+      return;
+    }
+    buscar(sector);
+  });
+
+  const inicial = new URLSearchParams(location.search).get('sector');
+  if (inicial) {
+    campoSector.value = inicial;
+    if (inicial.trim()) {
+      await buscar(inicial.trim());
+    }
+  }
+}
+
 async function main() {
-  await Promise.all([cocinero(), miHornada()]);
+  await Promise.all([cocinero(), miHornada(), listado()]);
 }
 
 main();

@@ -34,6 +34,71 @@ h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
 
 h2 { margin-top: 0; }
 
+/* --- Listado del sector (cupo, datos y textos: lo que devuelve la API) --- */
+
+.card-hornada {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px;
+  list-style: none;
+}.hornada-cocinero {
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+
+.hornada-meta {
+  margin: 6px 0 0;
+  color: var(--secundario);
+  font-size: 0.85rem;
+}
+
+.hornada-precio {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+
+#lista-hornadas {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+#lista-hornadas[hidden] { display: none; }
+
+.chip-cupo {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--secundario);
+  background: var(--base);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+}
+
+#estado-vacio {
+  margin: 16px 0 0;
+  padding: 16px;
+  border: 1px dashed var(--borde);
+  border-radius: 12px;
+}
+
+#estado-vacio[hidden] { display: none; }
+
+#estado-vacio h3 { margin: 0 0 4px; }
+
+#estado-vacio p { margin: 0; }
+
+#estado-vacio a { color: var(--acento); }
+
+/* --- fin listado --- */
+
 form { display: grid; gap: 14px; }
 
 label {

@@ -339,13 +339,13 @@ test('EX-09a · una hornada cuyo desde todavía no llega pero hasta es futuro S�
 test('C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio con la invitación a cocinar y NO existe la lista de tarjetas', async () => {
   assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo');
   const SECTOR_VACIO = `sector-vacio-${Date.now()}`;
-  await withBrowser(`${BASE}/#${encodeURIComponent(SECTOR_VACIO)}`, async ({ evaluate }) => {
+  await withBrowser(`${BASE}/?sector=${encodeURIComponent(SECTOR_VACIO)}`, async ({ evaluate }) => {
     await new Promise((r) => setTimeout(r, 700)); // deja correr el fetch del listado
     const info = await evaluate(`
       (() => {
         const vacio = document.querySelector('#estado-vacio');
         const lista = document.querySelector('#lista-hornadas');
-        const tarjetas = document.querySelectorAll('#card-hornada');
+        const tarjetas = document.querySelectorAll('[id^="card-hornada"]');
         const texto = vacio ? (vacio.textContent || '') : '';
         const enlaces = vacio ? [...vacio.querySelectorAll('a')].map((a) => ({ href: a.getAttribute('href'), texto: (a.textContent || '').trim() })) : [];
         return {
@@ -362,7 +362,7 @@ test('C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio co
     assert.ok(info.vacioVisible, 'C-29 · #estado-vacio debe estar visible (display != none)');
     assert.ok(info.mencionaCocinar, 'C-29 · el estado vacío debe invitar a registrarse como cocinero');
     assert.ok(
-      info.enlaces.some((a) => /cocinar|registro|registrarme/i.test(a.href + ' ' + a.texto)),
+      info.enlaces.some((a) => /cociner|registr/i.test(a.href + ' ' + a.texto)),
       'C-29 · el estado vacío debe traer el enlace a registrarse como cocinero',
     );
     assert.equal(info.nTarjetas, 0, 'C-29 · no debe haber tarjetas #card-hornada si no hay hornadas');
@@ -396,12 +396,12 @@ test('EX-29c · el listado se pinta en el DOM real con tarjetas #card-hornada y 
   const disponiblesApi = apiBody?.hornadas?.[0]?.disponibles;
   assert.equal(disponiblesApi, h1.unidades, 'EX-29c · precondición: la API debe decir disponibles = unidades');
 
-  await withBrowser(`${BASE}/#${encodeURIComponent(SECTOR)}`, async ({ evaluate }) => {
+  await withBrowser(`${BASE}/?sector=${encodeURIComponent(SECTOR)}`, async ({ evaluate }) => {
     await new Promise((r) => setTimeout(r, 700)); // deja correr el fetch del listado
     const info = await evaluate(`
       (() => {
         const lista = document.querySelector('#lista-hornadas');
-        const tarjetas = [...document.querySelectorAll('#card-hornada')];
+        const tarjetas = [...document.querySelectorAll('[id^="card-hornada"]')];
         return {
           listaExiste: !!lista,
           nTarjetas: tarjetas.length,

@@ -13,6 +13,27 @@
   </header>
 
   <main>
+    <section class="card" aria-labelledby="titulo-listado">
+      <h2 id="titulo-listado">Tu sector.</h2>
+      <p>Elegí tu sector y mirá lo que está saliendo del horno cerca de tu casa.</p>
+
+      <form id="form-listado">
+        <label for="campo-sector-listado">Sector: el barrio donde buscás el pan.</label>
+        <input id="campo-sector-listado" name="sector" type="text" autocomplete="off" placeholder="Chicureo – Piedra Roja">
+
+        <button type="submit">Ver mi sector</button>
+      </form>
+
+      <p id="mensaje-listado" class="mensaje" role="status"></p>
+
+      <div id="estado-vacio" hidden>
+        <h3>Nadie hornea en tu sector todavía.</h3>
+        <p>Si tu horno está libre, <a href="#form-cocinero">regístrate como cocinero</a> y sacá tu primera hornada.</p>
+      </div>
+
+      <ul id="lista-hornadas" hidden></ul>
+    </section>
+
     <section class="card" aria-labelledby="titulo-cocinar">
       <h2 id="titulo-cocinar">Quiero cocinar.</h2>
       <p>Tu horno ya está caliente: regístrate para que los vecinos de tu sector te encuentren.</p>
