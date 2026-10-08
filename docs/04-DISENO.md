@@ -3,288 +3,406 @@
 > Fase 4. Dueño: **Arquitecto**. Decidir *cómo* se construye. Termina con
 > trazabilidad completa hacia la definición.
 
-- **Proyecto:**
-- **Fecha:**
-- **Basado en:** `03-DEFINICION.md`
+- **Proyecto:** Hornada
+- **Fecha:** 2026-10-08
+- **Basado en:** `03-DEFINICION.md` (G1 ✅ 2026-10-08, con 3 cambios)
 
 ## Arquitectura
+
+Una sola aplicación. **Una página estática** que se sirve gratis desde el borde y
+**una API chica** que es el único lugar donde hay estado. Nada de build, nada de
+dependencias de runtime.
 
 ### Componentes
 
 | Componente | Responsabilidad | Límite |
 |---|---|---|
-| … | … | … |
+| `public/` (HTML + CSS + JS) | Las pantallas: listado del sector, reservar, panel del cocinero, resena | **No calcula cupo.** Muestra lo que la API dice; si calcula, miente |
+| `src/index.js` (Worker) | Router de la API, validaciones, reglas de negocio | No renderiza HTML: solo JSON |
+| D1 (`hornada`) | Estado: cocineros, hornadas, reservas, reseñas | Es la única fuente de verdad del cupo |
+| Assets (binding `ASSETS`) | Sirve `public/` sin pasar por el Worker | Los requests de assets no se facturan ni consumen CPU del script |
 
 ### Flujo de datos
 
-> Diagrama o descripción paso a paso.
+1. El cliente abre la app → los assets responden (el Worker **no** participa).
+2. Elige sector → `GET /api/hornadas?sector=…` → el Worker consulta D1 y devuelve
+   solo las hornadas **abiertas** del sector, con el promedio de reseñas del cocinero.
+3. Reserva N unidades → `POST /api/hornadas/:id/reservas` → el Worker ejecuta un
+   **UPDATE condicional** (`… AND disponibles >= N`); si `changes = 1` descontó y
+   acepta; si no, responde `409` sin tocar el cupo. **Nunca hay sobreventa.**
+4. Recibe un `codigo` de reserva (su llave, sin cuenta) para volver a mirarla.
+5. El cocinero entra con **su token** → ve sus pedidos, marca entregado.
+6. El cliente con reserva entregada califica → `POST /api/reservas/:codigo/resena`.
+7. El promedio del cocinero se **deriva en la lectura**: si tiene ≥ 5 reseñas y
+   promedio < 3,0, desaparece del listado (sus reservas vivas siguen vigentes).
 
 ### Diagrama
 
-> Opcional: generar con la skill `architecture-diagram`.
+```
+  navegador
+     │  GET /                      │  /api/*
+     ▼                             ▼
+  ┌──────────────┐   no factura  ┌──────────────────┐
+  │   ASSETS     │◄──────────────│  Worker (src)    │
+  │  public/     │               │  router + reglas │
+  └──────────────┘               └────────┬─────────┘
+                                    UPDATE condicional
+                                          ▼
+                                   ┌─────────────┐
+                                   │  D1 hornada │
+                                   └─────────────┘
+```
 
 ## Contratos
 
-> Lo bastante precisos para que el Coder no tenga que adivinar nada.
+> Lo bastante precisos para que el Coder no tenga que adivinar. **Estos nombres son
+> el contrato**: el test los nombra y el Coder los usa tal cual.
 
 ### API / Interfaces
 
 ```
-<endpoint o firma>
-Entrada: …
-Salida: …
-Errores: …
+POST /api/cocineros
+Entrada: { nombre, sector, referencia_retiro, foto_url? }
+Salida:  201 { cocinero: { id, nombre, sector, token } }
+Errores: 400 { error: 'falta_nombre' | 'falta_sector' }   ← C-03
+
+GET /api/hornadas?sector=<texto>
+Salida:  200 { hornadas: [ { id, pan, desde, hasta, disponibles, precio,
+                            modalidades: ['retiro','despacho'],
+                            referencia_retiro,
+                            cocinero: { id, nombre, promedio, resenas } } ] }
+         (solo ABIERTAS y no agotadas; orden: `desde` ascendente)   ← C-08, C-09, C-26, C-29
+Errores: 400 { error: 'falta_sector' }
+
+POST /api/hornadas
+Entrada: { cocinero_token, pan, desde, hasta, unidades, precio, modalidades, referencia_retiro }
+Salida:  201 { hornada: { id, unidades, disponibles: unidades, estado: 'abierta' } }
+Errores: 403 { error: 'token_invalido' | 'cocinero_suspendido' }
+         409 { error: 'ya_tiene_hornada_abierta' }   ← C-06
+         400 { error: 'unidades_invalidas' | 'precio_invalido' | 'modalidades_invalidas' }  ← C-07
+
+GET /api/hornadas/:id
+Salida:  200 { hornada: { id, pan, desde, hasta, disponibles, precio, modalidades,
+                          referencia_retiro, cocinero: { nombre, promedio, resenas } } }
+Errores: 404 { error: 'no_existe' }
+
+POST /api/hornadas/:id/reservas
+Entrada: { nombre, contacto, unidades, modalidad, direccion? }
+Salida:  201 { reserva: { codigo, unidades, total, modalidad,
+                          donde } }        ← donde = referencia_retiro | direccion
+Errores: 400 { error: 'falta_nombre' | 'falta_contacto' | 'falta_direccion' }  ← C-17, C-23
+         400 { error: 'modalidad_no_ofrecida' }    ← C-22
+         409 { error: 'sin_cupo' | 'hornada_cerrada' }  ← C-15, C-16, C-21
+         404 { error: 'no_existe' }
+
+GET /api/reservas/:codigo
+Salida:  200 { reserva: { estado, unidades, modalidad, donde, hornada: { pan, desde, hasta },
+                          puede_calificar: bool } }   ← C-20, C-25
+Errores: 404 { error: 'no_existe' }
+
+GET /api/cocineros/mi-panel?token=<token>
+Salida:  200 { cocinero: { nombre, sector, promedio, resenas, suspendido, motivo_suspension },
+               hornadas: [ { id, pan, desde, hasta, disponibles, estado,
+                             reservas: [ { id, nombre, contacto, unidades, modalidad,
+                                           direccion, estado } ] } ] }   ← C-18, C-28
+Errores: 403 { error: 'token_invalido' }
+
+POST /api/reservas/:id/entregado
+Entrada: { cocinero_token }
+Salida:  200 { reserva: { id, estado: 'entregada' } }   ← C-19
+Errores: 403 { error: 'token_invalido' | 'no_es_tu_reserva' }
+         404 { error: 'no_existe' }
+
+POST /api/reservas/:codigo/resena
+Entrada: { estrellas, comentario? }
+Salida:  201 { resena: { estrellas } }
+Errores: 400 { error: 'estrellas_invalidas' }          ← 1–5
+         409 { error: 'ya_calificada' | 'reserva_no_entregada' }   ← C-25
+         404 { error: 'no_existe' }
 ```
 
 ### Esquemas de datos
 
+```sql
+CREATE TABLE cocineros (
+  id                 TEXT PRIMARY KEY,
+  nombre             TEXT NOT NULL,
+  sector             TEXT NOT NULL,
+  referencia_retiro  TEXT NOT NULL,
+  foto_url           TEXT,
+  token              TEXT NOT NULL UNIQUE,
+  creado_en          TEXT NOT NULL
+);
+
+CREATE TABLE hornadas (
+  id                 TEXT PRIMARY KEY,
+  cocinero_id        TEXT NOT NULL REFERENCES cocineros(id),
+  pan                TEXT NOT NULL,
+  desde              TEXT NOT NULL,   -- ISO
+  hasta              TEXT NOT NULL,   -- ISO
+  unidades           INTEGER NOT NULL CHECK (unidades > 0),
+  disponibles        INTEGER NOT NULL CHECK (disponibles >= 0),
+  precio             INTEGER NOT NULL CHECK (precio > 0),   -- CLP, entero
+  modalidades        TEXT NOT NULL,   -- 'retiro,despacho'
+  referencia_retiro  TEXT NOT NULL,
+  estado             TEXT NOT NULL,   -- 'abierta' | 'cerrada'
+  creada_en          TEXT NOT NULL
+);
+
+CREATE TABLE reservas (
+  id          TEXT PRIMARY KEY,
+  hornada_id  TEXT NOT NULL REFERENCES hornadas(id),
+  codigo      TEXT NOT NULL UNIQUE,   -- llave del cliente, sin cuenta
+  nombre      TEXT NOT NULL,
+  contacto    TEXT NOT NULL,
+  unidades    INTEGER NOT NULL CHECK (unidades > 0),
+  modalidad   TEXT NOT NULL,          -- 'retiro' | 'despacho'
+  direccion   TEXT,
+  total       INTEGER NOT NULL,
+  estado      TEXT NOT NULL,          -- 'reservada' | 'entregada'
+  creada_en   TEXT NOT NULL
+);
+
+CREATE TABLE resenas (
+  id           TEXT PRIMARY KEY,
+  reserva_id   TEXT NOT NULL UNIQUE REFERENCES reservas(id),  -- una por reserva
+  cocinero_id  TEXT NOT NULL REFERENCES cocineros(id),
+  estrellas    INTEGER NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
+  comentario   TEXT,
+  creada_en    TEXT NOT NULL
+);
 ```
-<estructura>
+
+**La regla del cupo, que es todo el producto:**
+
+```sql
+UPDATE hornadas SET disponibles = disponibles - ?2, estado = CASE WHEN disponibles - ?2 = 0
+  THEN 'cerrada' ELSE estado END
+ WHERE id = ?1 AND estado = 'abierta' AND disponibles >= ?2;
 ```
+
+Si `meta.changes !== 1` → `409 sin_cupo`. Es **una sola sentencia atómica**: no hay
+ventana entre leer y escribir, y por eso C-15 y C-16 se sostienen bajo concurrencia.
 
 ## Stack y dependencias
 
 | Elección | Versión | Justificación |
 |---|---|---|
-| … | … | … |
+| Cloudflare Workers | runtime del borde | Es la única plataforma del set que ejecuta código propio con almacenamiento (ver ADR-003) |
+| D1 (SQLite) | binding `DB` | Necesitamos una resta **atómica** contra la sobreventa (ver ADR-002) |
+| HTML + CSS + JS nativos | — | El entregable corre sin `npm install`; sin build no hay paso que se rompa solo (ADR-004) |
+| `node --test` | el que trae el Node del host | Los tests son parte del contrato, no del producto |
+| `wrangler` | 4.x | Única herramienta de desarrollo y despliegue |
 
 ## Despliegue  ⭐ OBLIGATORIA
 
-> **El diseño no está terminado sin esto.** «Se despliega en Cloudflare» no es una
-> respuesta: es el nombre de la plataforma. Ver la skill **`cloudflare-architecture`**
-> para los límites reales, la elección de bindings y las trampas verificadas.
->
-> **El despliegue se define para DOS entornos, no uno:** local y cloud. Un diseño
-> que solo describe producción obliga a improvisar en la máquina de desarrollo —
-> y ahí es donde aparece «en mi máquina funciona».
-
 ### Todo lo que se publica
-
-> **«Despliegue» no es sinónimo de «el producto».** Declarar **todo** lo que queda
-> publicado, con plataforma, dueño y comando. En el harness hay normalmente **dos**:
 
 | Qué | Dónde | Quién | Cómo |
 |---|---|---|---|
-| **El producto** | … | el Orquestador | … |
-| **El tablero** (`progreso.html`) | GitHub Pages (harness) | el Orquestador | `scripts/update-status.sh --push` |
-
-Un diseño que menciona un solo destino deja creyendo que hay uno.
+| **El producto** | Cloudflare Worker `hornada` → `https://hornada.mkvs.workers.dev` | el Orquestador | `npx wrangler deploy` |
+| **La vista previa del ciclo** | Cloudflare Worker `hornada-preview` | el Orquestador | `npx wrangler deploy --name hornada-preview` |
+| **El tablero** (`progreso.html`) | GitHub Pages (repo público, rama `main`) | el Orquestador | `scripts/update-status.sh <dir> --push` |
+| **El mockup congelado** | Cloudflare Worker `hornada-mockup` → `https://hornada-mockup.mkvs.workers.dev` | el Orquestador | `npx wrangler deploy` en `docs/mockup/` |
 
 ### Qué plataforma  ⭐ OBLIGATORIA
 
-> **Decide el Arquitecto, no el gusto.** La pregunta no es «¿dónde me gusta
-> desplegar?» sino **«¿qué tiene que hacer esto en runtime?»**.
+**Cloudflare Workers.** El artefacto **tiene código en runtime**: guarda reservas,
+descuenta cupo y valida tokens. Estático puro no puede: si el cupo viviera en el
+navegador, cada vecino vería su propia copia y dos vecinos reservarían la misma
+docena. Ver `ADR-003-<plataforma>.md`.
 
-| El artefacto es… | Plataforma | Por qué |
-|---|---|---|
-| **Solo HTML/CSS/JS estático** (sin código en el servidor) | **GitHub Pages** | Cero configuración, **cero token**, cero cuenta que administrar. El sitio ya existe: la URL aparece al hacer push. |
-| **Con código en runtime** (Worker, API, bindings, estado, secretos) | **Cloudflare Workers** | Es la única que ejecuta. Pages no corre un script. |
-
-**El corte suele ser de ETAPA, no de proyecto.** Un producto puede empezar estático y
-volverse dinámico: la decisión se declara **con la etapa**, y se revisa cuando el
-diseño cambia de etapa. «Ya veremos» no es una decisión.
-
-⚠️ **Repos privados:** Pages gratis publica **solo repos públicos**. Si el repo es
-privado, esa razón sola manda a Cloudflare.
-
-⚠️ **Y el cruce con la vista previa por ciclo.** Pages sirve **una sola rama**, así que
-no da una URL por rama gratis como Workers Builds. Para un artefacto estático **no hace
-falta**: se publica el ciclo en una **ruta del mismo sitio**
-(`https://<owner>.github.io/<repo>/preview/<ciclo>/`) — mismo origen que el tablero,
-sin token y sin beta. Con Cloudflare, el equivalente es una **Preview URL**.
-**La plataforma se elige por lo que corre; la vista previa se resuelve dentro de la
-plataforma elegida.**
+- **Forma del Worker — C · Worker + bindings**: assets estáticos para las pantallas,
+  un script para `/api/*` y **D1** para el estado. Los assets se sirven gratis y solo
+  se factura lo que toca el script.
+- **`run_worker_first: ["/api/*"]`** — el resto del tráfico nunca despierta al Worker.
 
 ### Vista previa por ciclo  ⭐ OBLIGATORIA
 
-> **Un ciclo no termina sin una URL que el humano pueda abrir.** El PO trabaja
-> **remoto**: «corré esto en local» no es una instrucción, es un callejón sin salida.
-> Un diseño que solo describe el despliegue de producción deja al PO sin forma de
-> revisar nada hasta el final.
-
-Declarar **cómo se ve el trabajo de cada ciclo antes de que exista producción**:
-
 | | |
 |---|---|
-| **Mecanismo** | Cloudflare **Previews** (`npx wrangler preview`) o **Workers Builds** (Preview URL automática por rama). **NO** `--preview-alias`: Cloudflare lo desaconseja explícitamente — *«los Aliased Version URLs no crean recursos aislados por rama»*. |
-| **Quién publica** | El **Orquestador**. El Coder **no despliega** y no tiene token. |
-| **Cuándo** | Al cerrar cada ciclo, junto con el smoke. |
-| **Dónde queda** | En el tablero y en el handoff: **la URL se entrega, no se describe**. |
-
-⚠️ **Las Version URLs (`wrangler versions upload`) NO sirven para esto**: usan los
-recursos de **producción**. Cloudflare: *«Do not use Version URLs for branch or pull
-request testing.»*
-
-⚠️ **Si el mecanismo está en beta o no se probó, decirlo.** Diseñar sobre una beta no
-verificada es el mismo error que asumir que el PO está en la máquina.
-
-### Forma del Worker
-
-| Opción | Cuándo |
-|---|---|
-| **A · Solo assets** (sin `main`) | App estática. Requests de assets gratis e ilimitados |
-| **B · Assets + Worker** | App estática **y** API. Solo se factura lo que toca el script |
-| **C · Worker + bindings** | El caso B más almacenamiento |
-
-**Elegida:** … **Por qué:** …
+| **Mecanismo** | **Worker de vista previa dedicado** (`hornada-preview`), con su propia base D1 de prueba. **No se usa Workers Builds**: requiere integración Git y hoy está en beta, y el harness prohíbe diseñar sobre una beta sin verificar. **No se usan Version URLs** (`wrangler versions upload`): Cloudflare dice explícitamente que comparten recursos de producción. |
+| **Quién publica** | El **Orquestador**. El Coder **no despliega** y no tiene token: `wrangler dev` corre sin credenciales. |
+| **Cuándo** | Al cerrar cada ciclo, junto con el smoke contra la URL real. |
+| **Dónde queda** | En el tablero y en el handoff: `docs/estado.json` → `urls.preview`. **La URL se entrega, no se describe.** |
 
 ### Entornos
 
 | | Local | Cloudflare |
 |---|---|---|
-| Comando | `npx wrangler dev` (¿qué puerto?) | `npx wrangler deploy` |
-| Qué corre | … | … |
-| **Qué NO corre igual** | … | — |
+| Comando | `npx wrangler dev --port 8787` | `npx wrangler deploy` |
+| Qué corre | El Worker real sobre **workerd** (Miniflare) + una **D1 local** | El Worker y la D1 remota |
+| Migraciones | `npx wrangler d1 migrations apply hornada --local` | `… --remote` |
+| Qué NO corre igual | **No aplica los límites del plan** (10 ms de CPU, cuotas diarias, 429) y no tiene el borde ni caché | — |
 
-> **Paridad declarada, no supuesta.** El emulador local **no** aplica los límites del
-> plan: algo que pasa en local puede fallar en producción.
+> **Paridad declarada, no supuesta.** Un test verde en local no dice nada sobre la
+> cuota diaria de D1 ni sobre el CPU del plan Free: eso lo cubre el smoke.
 
 ### Dónde corren las pruebas  ⭐ OBLIGATORIA
 
-> La pregunta «¿las pruebas corren en local o en Cloudflare?» **se responde acá**, no
-> se deja abierta. Y la respuesta no es «una de las dos».
-
-**Dos niveles, con propósitos distintos:**
-
 | | **Suite** | **Smoke** |
 |---|---|---|
-| **Dónde** | **Local** (`wrangler dev` / Miniflare) | **Cloudflare** (la URL real) |
-| **Cuándo** | Antes de cada merge, en cada ciclo | Después de cada deploy |
-| **Qué prueba** | El **comportamiento** (la matriz de casos) | Que **lo desplegado es lo construido** y funciona en el edge |
+| **Dónde** | **Local**: `wrangler dev` en `127.0.0.1:8787` | **Cloudflare**: la URL publicada |
+| **Cuándo** | Antes de cada integración, en cada ciclo | Después de cada deploy |
+| **Qué prueba** | Los 29 casos de la matriz + los casos que agregue el Coder | Que lo desplegado es lo construido y funciona en el borde |
 | **Costo** | Cero cuota, cero red, determinista | Consume cuota real |
-| **Quién la corre** | El **Coder** (y Hermes la verifica) | **Hermes**, el único que despliega |
+| **Quién** | El **Coder** (Hermes lo reproduce) | **Hermes**, el único que despliega |
 
-**Por qué la suite NO corre en Cloudflare:** es determinista, no depende de la red ni
-del plan, y no gasta la cuota diaria. Una suite que corre contra producción es lenta,
-frágil, y **cambia el veredicto según el día**.
-
-**Por qué el deploy SÍ necesita verificación en el edge:** el emulador local no aplica
-los límites del plan (10 ms de CPU, cuotas, 429). **Un diseño que pasa en local puede
-dar Error 1102 en producción.** El smoke test es chico y explícito: la URL responde,
-los assets cargan, la versión desplegada es la construida, y nada sensible quedó
-público.
-
-> **El smoke no reemplaza la suite, y la suite no reemplaza el smoke.** Uno prueba que
-> el producto hace lo que dice; el otro, que lo que está publicado es ese producto.
-
-**Definir:** qué corre en la suite · qué corre en el smoke · quién despliega.
+La suite arranca el dev server y le habla por HTTP: es la misma app, en el mismo
+runtime, sin credenciales y sin tocar producción.
 
 ### Bindings
 
-| Binding | Tipo (KV / D1 / R2 / DO / AI) | Para qué |
+| Binding | Tipo | Para qué |
 |---|---|---|
-| … | … | … |
+| `DB` | **D1** | Cocineros, hornadas, reservas y reseñas. Es la fuente de la verdad del cupo |
+| `ASSETS` | Assets | Sirve `public/` (HTML/CSS/JS) |
+
+`wrangler.jsonc` de producción declara `name: hornada`, `main: src/index.js`,
+`assets.directory: ./public`, `run_worker_first: ["/api/*"]` y el binding D1 con su
+`database_id`.
 
 ### Límite que puede romperlo
 
-> ¿Cuál es el límite del plan que este diseño puede agotar, y **qué pasa** cuando se
-> agota? (En Free, agotar requests con `run_worker_first` devuelve **429** y el sitio
-> **no** cae de vuelta a los assets.)
-
-- Límite: … → Consecuencia: …
+- **Requests/día del plan Free (100.000)** → al agotarse, el Worker responde **429 y
+  NO cae de vuelta a los assets**. En un piloto de un barrio está lejos, pero el
+  diseño no depende de eso: las pantallas son assets y solo `/api/*` cuenta.
+- **CPU por request (10 ms en Free)** → el riesgo real no es una consulta, es
+  **serializar una lista larga**. Consecuencia: si el listado crece, el request
+  empieza a fallar con Error 1102. **Mitigación en el ciclo 1: el listado devuelve
+  como máximo 50 hornadas** y ordena por fecha.
+- **Escrituras D1/día (100.000)** → una reserva es 1 escritura; una hornada de 10
+  docenas consume 10. El techo está ~10.000 docenas de pan al día. No es el límite
+  que va a romper un barrio.
 
 ### Presupuesto de CPU
 
-> Qué hace el Worker **en el camino del request**. En Free el techo es **10 ms**:
-> alcanza para headers, redirects, validar un token, proxear. No para parsear
-> payloads grandes, plantillas pesadas o criptografía en bucle.
-
-- …
+Cada endpoint hace **≤ 3 consultas D1** y serializa **≤ 50 filas**. Los tokens se
+generan **una vez por alta** con `crypto.randomUUID()`. Sin bucles sobre datos, sin
+criptografía por request, sin plantillas del lado del servidor: todo dentro del techo
+de 10 ms.
 
 ### Secretos
 
-> Dónde viven. Producción: `npx wrangler secret put <nombre>`. Local: `.dev.vars`
-> (y en `.gitignore`). **Nunca en el repo, nunca en el directorio de assets.**
+**El ciclo 1 no tiene secretos de aplicación**: no hay login, no hay pago, no hay
+claves de terceros. La identidad son **tokens opacos en la URL**, que son datos, no
+credenciales de plataforma.
 
-- …
+- El token de Cloudflare vive en `~/.hermes/.env`, **fuera del repo**, y solo lo usa
+  el Orquestador. **Nunca entra al entorno del Coder.**
+- No hace falta `.dev.vars` en el ciclo 1.
 
 ### Rollback
 
-- Comando: `npx wrangler rollback <version-id>` → **qué se restaura:** …
+- Comando: `npx wrangler rollback <version-id>` → **qué se restaura:** el código
+  anterior del Worker. **No revierte las migraciones de D1.**
+- Por eso la regla de migración del ciclo: **aditiva** (agregar columnas/tablas,
+  nunca `DROP` ni `ALTER` destructivo). Un rollback de código sobre un esquema
+  aditivo siempre es seguro.
 
 ### ¿Hay algo en el directorio de assets que NO debe ser público?
 
-> Todo lo que está ahí **se publica**. `.env`, source maps y `_worker.js` incluidos.
-
-- …
+- **No.** `public/` contiene solo HTML, CSS y JS del navegador. El código de la API
+  vive en `src/`, fuera de `public/`. No hay `.env`, ni source maps, ni claves.
+- Regla para el Coder: **todo lo que se pone en `public/` se publica** — no va ahí
+  ningún dato que no deba ser público, ni siquiera "de prueba".
 
 ## Decisiones (ADRs)
 
-> Una decisión técnica no obvia = un ADR. Ver `templates/ADR.md`.
-
-- `ADR-001-<tema>.md` — …
-- `ADR-002-<tema>.md` — …
+- `ADR-001-identidad-sin-cuentas.md` — tokens opacos en vez de cuentas con login
+- `ADR-002-almacenamiento-d1.md` — D1 con UPDATE condicional en vez de KV o Durable Objects
+- `ADR-003-plataforma.md` — Cloudflare Workers en vez de GitHub Pages o un BaaS
+- `ADR-004-sin-build.md` — HTML/CSS/JS nativos en vez de framework con build
 
 ## Matriz de casos de prueba  ⭐ OBLIGATORIA
 
-> **Los casos se identifican acá, en el diseño.** No son código: son el contrato de
-> qué significa "terminado". El Coder los traduce a tests ejecutables y **puede
-> agregar los que se le ocurran; no puede quitar ninguno.**
->
-> **Por qué acá y no en el Coder.** El Coder es dueño de los tests, pero si además
-> *inventa los casos*, decide qué significa "hecho" — y eso es alcance, con disfraz
-> de test. `ROLES.md` ya dice que el Coder no decide alcance.
+> Los casos se identifican **acá**. El Coder los traduce a tests **nombrados con su
+> ID** (`test('C-01 · …')`) y **puede agregar los que se le ocurran; no puede quitar
+> ninguno**. `scripts/check-coverage.sh` lo comprueba.
 
 | ID | Caso | Criterio de origen | Tipo | Observable esperado |
 |---|---|---|---|---|
-| `C-01` | … | HU-1 / #1 | estructura / comportamiento / umbral / empaquetado | qué se mide y con qué límite |
+| `C-01` | El formulario de registro existe con sus 4 campos | HU-1 / C-01 | estructura | `#form-cocinero` existe y contiene los inputs `nombre`, `sector`, `referencia_retiro`, `foto_url` |
+| `C-02` | Registro válido crea el cocinero y lo lista en su sector | HU-1 / C-02 | comportamiento | `POST /api/cocineros` → 201 y `GET /api/hornadas?sector=…` lo asocia a ese sector |
+| `C-03` | Registro sin nombre o sin sector se rechaza | HU-1 / C-03 | comportamiento | 400 con `error: 'falta_nombre'` / `'falta_sector'` y el cocinero **no** se crea (mismo listado antes y después) |
+| `C-04` | El formulario de hornada existe con sus campos | HU-2 / C-04 | estructura | `#form-hornada` con `pan`, `desde`, `hasta`, `unidades`, `precio`, `modalidades`, `referencia_retiro` |
+| `C-05` | Publicar hornada la crea abierta con el cupo completo | HU-2 / C-05 | comportamiento | 201 y `disponibles === unidades`, `estado === 'abierta'` |
+| `C-06` | Una segunda hornada abierta del mismo cocinero se rechaza | HU-2 / C-06 | comportamiento | 409 `ya_tiene_hornada_abierta` y sigue habiendo **una** abierta |
+| `C-07` | Unidades 0 o precio ≤ 0 se rechazan | HU-2 / C-07 | umbral | 400 `unidades_invalidas` con `unidades: 0`; 400 `precio_invalido` con `precio: 0` |
+| `C-08` | El listado trae solo las hornadas abiertas del sector, por fecha | HU-3 / C-08 | comportamiento | con 2 abiertas en el sector y 1 en otro, devuelve 2 y sus `desde` son ascendentes |
+| `C-09` | Una hornada agotada o vencida no se lista | HU-3 / C-09 | comportamiento | con `disponibles = 0` o `hasta` en el pasado, no aparece en `GET /api/hornadas` |
+| `C-29` | Sector sin hornadas muestra el estado vacío | HU-3 / C-29 | estructura | existe `#estado-vacio` con el enlace a registrarse como cocinero; **no** existe la lista de tarjetas |
+| `C-10` | El listado es una sola columna a 390 px | HU-3 / C-10 | forma | `getBoundingClientRect()` de las tarjetas: `left` iguales ±2 px y `top` de cada una ≥ `bottom` de la anterior |
+| `C-11` | El chip de cupo va anclado al vértice superior derecho | HU-3 / C-11 | forma | `chip.top − tarjeta.top` y `tarjeta.right − chip.right` iguales entre tarjetas ±2 px |
+| `C-12` | El botón de reserva ocupa el ancho interno de la tarjeta | HU-3 / C-12 | forma | `\|ancho_interno − ancho_botón\| ≤ 2 px`, margen inferior igual ±2 px entre tarjetas, alto ≥ 44 px |
+| `C-13` | El texto secundario sostiene ≥ 4,5:1 de contraste | HU-3 / C-13 | umbral | luminancia relativa WCAG ≥ 4.5 en metadatos de tarjeta y avisos |
+| `C-14` | Reservar descuenta el cupo y devuelve dónde obtener el pan | HU-4 / C-14 | comportamiento | 201, `disponibles` baja en N y la respuesta trae `donde` |
+| `C-15` | Reservar más que el cupo se rechaza sin tocarlo | HU-4 / C-15 | comportamiento | 409 `sin_cupo` y `disponibles` idéntico antes y después |
+| `C-16` | La última unidad cierra la hornada | HU-4 / C-16 | comportamiento | reservando el cupo exacto: `disponibles = 0` y `estado = 'cerrada'` |
+| `C-17` | Reserva sin nombre o sin contacto se rechaza | HU-4 / C-17 | comportamiento | 400 `falta_nombre` / `falta_contacto` y el cupo no cambia |
+| `C-18` | El panel del cocinero lista sus pedidos, y solo los suyos | HU-5 / C-18 | comportamiento | `GET /api/cocineros/mi-panel?token=…` trae las reservas de sus hornadas; con el token de otro, 403 |
+| `C-19` | Marcar entregado persiste | HU-5 / C-19 | comportamiento | 200 y al volver a pedir el panel la reserva sigue `entregada` |
+| `C-20` | El cliente ve su reserva y solo la suya | HU-6 / C-20 | comportamiento | `GET /api/reservas/:codigo` trae estado y `donde`; un código ajeno no devuelve esa reserva |
+| `C-21` | Una hornada cerrada no acepta reservas | HU-7 / C-21 | comportamiento | 409 `hornada_cerrada` sobre una hornada agotada o con `hasta` pasado |
+| `C-22` | El cliente solo elige modalidades ofrecidas | HU-8 / C-22 | comportamiento | hornada que solo ofrece `retiro` + reserva con `modalidad: 'despacho'` → 400 `modalidad_no_ofrecida` |
+| `C-23` | Despacho exige dirección y la muestra al cocinero | HU-8 / C-23 | comportamiento | sin `direccion` → 400 `falta_direccion`; con ella, el panel del cocinero la incluye |
+| `C-24` | Retiro devuelve la referencia y no pide dirección | HU-8 / C-24 | comportamiento | reserva `retiro` → 201 con `donde === referencia_retiro` y sin exigir `direccion` |
+| `C-25` | Se califica una sola vez y solo con el pan entregado | HU-9 / C-25 | comportamiento | reserva `reservada` → 409 `reserva_no_entregada`; entregada → 201; repetir → 409 `ya_calificada` |
+| `C-26` | El promedio y la cantidad de reseñas salen en la tarjeta | HU-9 / C-26 | comportamiento | con 2 reseñas (5 y 4), la hornada trae `cocinero.promedio = 4.5` y `resenas = 2` |
+| `C-27` | Con ≥5 reseñas y promedio < 3,0 el cocinero se suspende | HU-9 / C-27 | umbral | 5 reseñas de 1 estrella → sus hornadas **no** aparecen en el listado y no aceptan reservas (403 `cocinero_suspendido`) |
+| `C-28` | La suspensión no borra las reservas ya hechas | HU-9 / C-28 | comportamiento | con el cocinero suspendido, su panel sigue mostrando las reservas vigentes y el `motivo_suspension` |
 
-**Reglas de la matriz:**
-
-1. **Toda fila nace de un criterio de aceptación de la fase 3.** Un caso sin
-   criterio de origen es alcance no pedido.
-2. **El `ID` es el contrato.** El test que lo cubre **se nombra con ese ID**
-   (`test('C-01 · …')`). Así la cobertura es **comprobable**:
-   `scripts/check-coverage.sh <proyecto>` verifica que todo ID de la matriz tiene
-   su test. Sin el ID en el nombre, la cobertura es una opinión.
-3. **Todo criterio de aceptación tiene ≥1 caso.** Un criterio sin caso es un
-   criterio que nadie va a verificar.
-4. **`Observable esperado`: qué se mide.** No "funciona bien" — "el contador
-   muestra `02/10` tras avanzar una piel". Si no se puede escribir el observable,
-   el caso no está definido.
-5. **Los casos de tipo `comportamiento` ejecutan el artefacto**, no lo leen. Un
-   test que solo comprueba que existe el CSS que *haría* la transición no verifica
-   la transición.
-6. **Los umbrales se escriben numéricos y con su límite** (contraste ≥ 4.5:1,
-   respuesta < 200 ms), nunca como "aceptable".
+**Reglas de la matriz:** toda fila nace de un criterio de `03-DEFINICION.md`; el ID
+es el contrato; todo criterio tiene ≥1 caso; los observables son medibles; los casos
+de `comportamiento` **ejecutan la app** (HTTP real contra `wrangler dev` + DOM real
+por CDP en los de `forma`), nunca leen el archivo; los umbrales van numéricos.
 
 ### Cobertura combinada
 
-Si hay ejes que se multiplican (N variantes × M estados), **la matriz tiene una
-fila por combinación o una fórmula explícita** (`C-40..C-59: 10 pieles × 2 modos`).
-Una fórmula sin filas es donde se esconden los literales escritos en duro.
+No aplica: el ciclo 1 no multiplica ejes. La modalidad (`retiro` | `despacho`) no
+genera variantes visuales distintas, solo campos condicionales.
 
-### Casos ocultos  (2–4 por ciclo)
+### Casos ocultos  (3)
 
-> Además de esta matriz **visible**, el Arquitecto escribe **2–4 casos ocultos** del
-> mismo ciclo, **mismo momento, distinto destino**: `oculto/<proyecto>/ciclo-<n>.test.mjs`
-> en el harness, **fuera del alcance del Coder**. Se ejecutan en **G5** con
-> `scripts/hidden-cases.sh run <proyecto> <ciclo>`, **solo después del commit final
-> del Coder**. Un caso oculto rojo es un **hallazgo de QA** (la matriz visible era más
-> angosta que el criterio), y al cierre **se promueve a esta matriz**.
->
-> **Solo en perfiles `producto` y `cliente`** (ver `PROCESS.md` §2). El volumen importa:
-> más de 4 es una segunda matriz en la sombra, y eso rompe que el contrato sea visible.
+> Viven en el harness (`oculto/Hornada/ciclo-1.test.mjs`), **fuera del alcance del
+> Coder**, y se ejecutan en G5 **después de su commit final**. Mismo momento, otro
+> destino: miden el criterio con más dureza que la matriz visible.
+
+- **OC-1 · Concurrencia real sobre la última docena** — dos reservas de 1 unidad
+  lanzadas **en paralelo** sobre una hornada con 1 disponible: exactamente una
+  201 y una 409, y `disponibles` termina en 0. (La matriz visible prueba la
+  secuencia; esta prueba el mismo instante.)
+- **OC-2 · El agotado no desaparece para quien ya reservó** — una hornada agotada deja
+  de listarse, pero el cliente que alcanzó a reservar **sigue viendo su reserva y su
+  `donde`** con su código.
+- **OC-3 · La suspensión es del listado, no del historial** — con 5 reseñas de 1
+  estrella el cocinero desaparece del listado, y **su panel sigue mostrando** las
+  reservas pendientes (incluida la dirección de un despacho).
 
 ### Clase de criterio
 
-> Cada fila declara la **clase** de su criterio de origen (de la fase 3):
-> `existencia` | `comportamiento` | `forma`. Un caso de clase `forma` **mide geometría**
-> (`getBoundingClientRect()` con tolerancia), no la describe. Es lo que evita el
-> learning #46: seis casos en verde con la forma equivocada.
+Cada fila declara la clase de su criterio de origen. Las de clase `forma`
+(`C-10` a `C-13`) **miden geometría** con `getBoundingClientRect()` y contraste con
+la fórmula de luminancia WCAG — nunca "se ve bien". Los valores de referencia están
+medidos sobre el mockup congelado: `left` = 45/45/45 · chip 13/13 px · ancho del
+botón 274 sobre 276 internos · contraste 6,17:1 y 5,82:1.
 
 ## Trazabilidad
 
-> El eslabón completo: **criterio → caso → tarea → test**. Si falta un eslabón, algo
-> se está colando sin verificar.
-
 | Criterio (fase 3) | Casos | Tarea(s) | Test que lo cubre |
 |---|---|---|---|
-| HU-1 / #1 | `C-01`, `C-02` | T-1 | `C-01 · …` |
+| HU-1 / C-01, C-02, C-03 | `C-01`, `C-02`, `C-03` | T-1 | `C-01 · …`, `C-02 · …`, `C-03 · …` |
+| HU-2 / C-04, C-05, C-06, C-07 | `C-04`, `C-05`, `C-06`, `C-07` | T-2 | `C-04 · …` a `C-07 · …` |
+| HU-3 / C-08, C-09, C-29, C-10, C-11, C-12, C-13 | `C-08`, `C-09`, `C-29`, `C-10`, `C-11`, `C-12`, `C-13` | T-3, T-4 | los mismos IDs |
+| HU-4 / C-14, C-15, C-16, C-17, C-22, C-23, C-24 | `C-14`, `C-15`, `C-16`, `C-17`, `C-22`, `C-23`, `C-24` | T-5, T-6 | los mismos IDs |
+| HU-5 / C-18, C-19 | `C-18`, `C-19` | T-7 | los mismos IDs |
+| HU-6 / C-20 | `C-20` | T-8 | `C-20 · …` |
+| HU-7 / C-21 | `C-21` | T-5 | `C-21 · …` |
+| HU-9 / C-25, C-26, C-27, C-28 | `C-25`, `C-26`, `C-27`, `C-28` | T-9 | los mismos IDs |
 
 ---
 
 **Gate G2:** todo criterio tiene ≥1 caso **con observable esperado**, todo caso nace
 de un criterio, toda tarea apunta a ≥1 caso, cada ADR tiene alternativas descartadas,
-y **existe la sección de Despliegue** que distingue **local** de **cloud** y declara
-el límite del plan que podría romper el diseño.
+y existe la sección de Despliegue que distingue **local** de **cloud** y declara el
+límite del plan que podría romper el diseño. → **G2 ✅**

@@ -72,8 +72,13 @@ ciclo 1: **primero se resuelve el lado del que cocina.**
 
 > Lo que damos por cierto sin verificarlo. Si alguno cae, cae el diseño.
 
-- **A1** — El pan **se retira** en la casa del cocinero. No hay delivery. (Dicho por
-  el usuario; es el diferencial del producto.)
+- **A1** — El pan **se retira** en la casa del cocinero. No hay delivery. (Dicho por el
+  usuario; es el diferencial del producto.)
+  → **Revisado en G1 (2026-10-08):** el usuario pidió que **el cliente elija retiro o
+  despacho**. A1 se reemplaza por: *la entrega tiene modalidad elegible; el despacho lo
+  hace el propio cocinero, dentro de su sector — no hay red de reparto.* La línea base
+  original se conserva arriba porque el cambio de entendimiento es información, no un
+  error. El anti-alcance suma "red de reparto o cadetería de terceros".
 - **A2** — El **sector/barrio** es la unidad de descubrimiento: el cliente elige su
   sector al entrar y ve solo lo de su sector.
 - **A3** — Ciclo 1 **sin pago in-app**: el precio es informativo y se paga al retirar.

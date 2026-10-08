@@ -2,51 +2,221 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T12:45:00Z",
+  "actualizado": "2026-10-08T13:20:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Definición — esperando G1 (humano)",
-  "siguiente": "Aprobación del usuario en G1 (mockup publicado + decisión sobre A4). Después: fase 4, diseño.",
+  "fase_actual": "Diseño cerrado — listo para despachar al Coder (fase 5)",
+  "siguiente": "Correr el canario de capacidad del modelo y despachar T-1 (registro del cocinero) con TDD.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
     "mockup": "https://hornada-mockup.mkvs.workers.dev"
   },
   "gates": {
-    "G0":  {"evaluado": 1, "rechazo": 0},
-    "G1a": {"evaluado": 1, "rechazo": 0},
-    "G1":  {"evaluado": 1, "rechazo": 0},
-    "G2":  {"evaluado": 0, "rechazo": 0},
-    "G3":  {"evaluado": 0, "rechazo": 0},
-    "G4":  {"evaluado": 0, "rechazo": 0},
-    "G5":  {"evaluado": 0, "rechazo": 0}
+    "G0": {
+      "evaluado": 1,
+      "rechazo": 0
+    },
+    "G1a": {
+      "evaluado": 1,
+      "rechazo": 0
+    },
+    "G1": {
+      "evaluado": 1,
+      "rechazo": 0
+    },
+    "G2": {
+      "evaluado": 1,
+      "rechazo": 0
+    },
+    "G3": {
+      "evaluado": 0,
+      "rechazo": 0
+    },
+    "G4": {
+      "evaluado": 0,
+      "rechazo": 0
+    },
+    "G5": {
+      "evaluado": 0,
+      "rechazo": 0
+    }
   },
-  "casos_ocultos": 0,
+  "casos_ocultos": 3,
   "fases": [
-    {"id": "idea",     "nombre": "1 · Idea",                  "estado": "listo",     "gate": "G0",  "resumen": "Requerimiento verbatim + P1–P3 respondidas por el usuario.", "puntos": []},
-    {"id": "analisis", "nombre": "2 · Análisis",              "estado": "listo",     "gate": "G1a", "resumen": "5 dudas resueltas por benchmark (Fooch, DishDivvy, ViandaApp); supuestos A1–A7; anti-alcance de 11 puntos.", "puntos": []},
-    {"id": "def",      "nombre": "3 · Definición",            "estado": "en-curso",  "gate": "G1",  "resumen": "7 HU y 21 criterios EARS con su clase; mockup congelado publicado. Falta la aprobación del usuario.", "puntos": []},
-    {"id": "diseno",   "nombre": "4 · Diseño",                "estado": "pendiente", "gate": "G2",  "resumen": "", "puntos": []},
-    {"id": "impl",     "nombre": "5 · Implementación y pruebas", "estado": "pendiente", "gate": "G5", "resumen": "", "puntos": []}
+    {
+      "id": "idea",
+      "nombre": "1 · Idea",
+      "estado": "listo",
+      "gate": "G0",
+      "resumen": "Requerimiento verbatim + P1–P3 respondidas por el usuario.",
+      "puntos": []
+    },
+    {
+      "id": "analisis",
+      "nombre": "2 · Análisis",
+      "estado": "listo",
+      "gate": "G1a",
+      "resumen": "5 dudas resueltas por benchmark (Fooch, DishDivvy, ViandaApp); supuestos A1–A7; anti-alcance de 11 puntos.",
+      "puntos": []
+    },
+    {
+      "id": "def",
+      "nombre": "3 · Definición",
+      "estado": "listo",
+      "gate": "G1",
+      "resumen": "9 HU y 29 criterios EARS con su clase. Aprobado por el usuario el 2026-10-08 con 3 cambios: reseñas de calidad con suspensión, retiro o despacho, y sector piloto Chicureo–Piedra Roja.",
+      "puntos": []
+    },
+    {
+      "id": "diseno",
+      "nombre": "4 · Diseño",
+      "estado": "listo",
+      "gate": "G2",
+      "resumen": "Workers + Static Assets + D1 (ADR-001 a ADR-004). Matriz de 29 casos con observable, 3 casos ocultos en el harness, 10 tareas y despliegue declarado (local + cloud + preview por ciclo).",
+      "puntos": []
+    },
+    {
+      "id": "impl",
+      "nombre": "5 · Implementación y pruebas",
+      "estado": "en-curso",
+      "gate": "G5",
+      "resumen": "",
+      "puntos": []
+    }
   ],
-  "tareas": [],
+  "tareas": [
+    {
+      "id": "T-1",
+      "titulo": "El cocinero se registra",
+      "estado": "pendiente",
+      "nota": "C-01 · C-02 · C-03"
+    },
+    {
+      "id": "T-2",
+      "titulo": "El cocinero publica su hornada",
+      "estado": "pendiente",
+      "nota": "C-04 · C-05 · C-06 · C-07"
+    },
+    {
+      "id": "T-3",
+      "titulo": "El cliente descubre su sector",
+      "estado": "pendiente",
+      "nota": "C-08 · C-09 · C-29"
+    },
+    {
+      "id": "T-4",
+      "titulo": "La forma del listado (medición)",
+      "estado": "pendiente",
+      "nota": "C-10 · C-11 · C-12 · C-13 · va al final"
+    },
+    {
+      "id": "T-5",
+      "titulo": "Reservar sin sobreventa",
+      "estado": "pendiente",
+      "nota": "C-14 · C-15 · C-16 · C-17 · C-21 · tarea crítica"
+    },
+    {
+      "id": "T-6",
+      "titulo": "Retiro o despacho",
+      "estado": "pendiente",
+      "nota": "C-22 · C-23 · C-24"
+    },
+    {
+      "id": "T-7",
+      "titulo": "El panel del cocinero",
+      "estado": "pendiente",
+      "nota": "C-18 · C-19"
+    },
+    {
+      "id": "T-8",
+      "titulo": "El cliente sigue su pedido",
+      "estado": "pendiente",
+      "nota": "C-20"
+    },
+    {
+      "id": "T-9",
+      "titulo": "Reseñas y suspensión",
+      "estado": "pendiente",
+      "nota": "C-25 · C-26 · C-27 · C-28"
+    },
+    {
+      "id": "T-10",
+      "titulo": "Cierre: suite completa",
+      "estado": "pendiente",
+      "nota": "no implementa nada"
+    }
+  ],
   "historias": [
-    {"id": "HU-1", "titulo": "El cocinero se registra",                        "criterios": "C-01 · C-02 · C-03"},
-    {"id": "HU-2", "titulo": "El cocinero publica su hornada",                  "criterios": "C-04 · C-05 · C-06 · C-07"},
-    {"id": "HU-3", "titulo": "El cliente descubre lo de su sector",            "criterios": "C-08 · C-09 · C-10 · C-11 · C-12 · C-13"},
-    {"id": "HU-4", "titulo": "El cliente reserva unidades",                     "criterios": "C-14 · C-15 · C-16 · C-17"},
-    {"id": "HU-5", "titulo": "El cocinero ve quién retira su pan",              "criterios": "C-18 · C-19"},
-    {"id": "HU-6", "titulo": "El cliente sigue su pedido",                      "criterios": "C-20"},
-    {"id": "HU-7", "titulo": "La hornada se cierra sola",                       "criterios": "C-21"}
+    {
+      "id": "HU-1",
+      "titulo": "El cocinero se registra",
+      "criterios": "C-01 · C-02 · C-03"
+    },
+    {
+      "id": "HU-2",
+      "titulo": "El cocinero publica su hornada",
+      "criterios": "C-04 · C-05 · C-06 · C-07"
+    },
+    {
+      "id": "HU-3",
+      "titulo": "El cliente descubre lo de su sector",
+      "criterios": "C-08 · C-09 · C-10 · C-11 · C-12 · C-13"
+    },
+    {
+      "id": "HU-4",
+      "titulo": "El cliente reserva unidades",
+      "criterios": "C-14 · C-15 · C-16 · C-17"
+    },
+    {
+      "id": "HU-5",
+      "titulo": "El cocinero ve quién retira su pan",
+      "criterios": "C-18 · C-19"
+    },
+    {
+      "id": "HU-6",
+      "titulo": "El cliente sigue su pedido",
+      "criterios": "C-20"
+    },
+    {
+      "id": "HU-7",
+      "titulo": "La hornada se cierra sola",
+      "criterios": "C-21"
+    }
   ],
   "siguientes_ciclos": [
-    {"id": "C2", "titulo": "Pago dentro de la app", "estado": "en-pausa", "nota": "Dicho por el usuario: 'el pago a posterior'. No arranca sin validación."},
-    {"id": "C3", "titulo": "Reputación y verificación del cocinero", "estado": "en-pausa", "nota": "Mitigación plena de R1 (confianza) y R2 (sanitario): hoy se mitiga parcial con historial + retiro en persona."},
-    {"id": "C4", "titulo": "Notificaciones al cocinero", "estado": "en-pausa", "nota": "Riesgo R5: hoy el cocinero ve los pedidos al abrir la app."}
+    {
+      "id": "C2",
+      "titulo": "Pago dentro de la app",
+      "estado": "en-pausa",
+      "nota": "Dicho por el usuario: 'el pago a posterior'. No arranca sin validación."
+    },
+    {
+      "id": "C3",
+      "titulo": "Reputación y verificación del cocinero",
+      "estado": "en-pausa",
+      "nota": "Mitigación plena de R1 (confianza) y R2 (sanitario): hoy se mitiga parcial con historial + retiro en persona."
+    },
+    {
+      "id": "C4",
+      "titulo": "Notificaciones al cocinero",
+      "estado": "en-pausa",
+      "nota": "Riesgo R5: hoy el cocinero ve los pedidos al abrir la app."
+    }
   ],
   "decisiones": [
-    {"id": "A1", "nota": "El pan se retira en la casa del cocinero: no hay delivery (dicho por el usuario)."},
-    {"id": "A4", "nota": "Ciclo 1 sin verificación de identidad ni sanitaria: la app se declara medio de contacto. Sube a G1."}
+    {
+      "id": "A1",
+      "nota": "Entrega con modalidad elegible (retiro o despacho); el despacho lo hace el cocinero dentro de su sector. Revisado en G1."
+    },
+    {
+      "id": "A4",
+      "nota": "Sin verificación de identidad ni sanitaria: la calidad se gobierna con reseñas y suspensión bajo umbral (G1)."
+    },
+    {
+      "id": "ADR-002",
+      "nota": "D1 con UPDATE condicional: la base decide el cupo, no el Worker."
+    }
   ],
   "diferido": [
     "Pago, cobro y comisión",

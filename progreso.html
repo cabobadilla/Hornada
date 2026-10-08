@@ -106,10 +106,10 @@
     <p class="sub">Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.</p>
     <div class="meta">
       <div class="kpi"><b>0%</b><span>Tareas del ciclo</span></div>
-      <div class="kpi"><b>0/0</b><span>Completadas</span></div>
+      <div class="kpi"><b>0/10</b><span>Completadas</span></div>
       <div class="kpi"><b>Ciclo 1</b><span>Ciclo activo</span></div>
       <div class="kpi"><b>Etapa 1 · registro de cocineros + pedido de clientes</b><span>Alcance</span></div>
-      <div class="kpi"><b>Definición — esperando G1 (humano)</b><span>Fase actual</span></div>
+      <div class="kpi"><b>Diseño cerrado — listo para despachar al Coder (fase 5)</b><span>Fase actual</span></div>
     </div>
     <div class="barra"><i></i></div>
   </header>
@@ -129,26 +129,76 @@
       <p class="resumen">5 dudas resueltas por benchmark (Fooch, DishDivvy, ViandaApp); supuestos A1–A7; anti-alcance de 11 puntos.</p>
       
     </section>
-    <section class="fase run">
-      <header><span class="chip run">◐ En curso</span><span class="gate gate-wait">G1</span></header>
+    <section class="fase ok">
+      <header><span class="chip ok">✓ Listo</span><span class="gate gate-ok">G1</span></header>
       <h3>3 · Definición</h3>
-      <p class="resumen">7 HU y 21 criterios EARS con su clase; mockup congelado publicado. Falta la aprobación del usuario.</p>
+      <p class="resumen">9 HU y 29 criterios EARS con su clase. Aprobado por el usuario el 2026-10-08 con 3 cambios: reseñas de calidad con suspensión, retiro o despacho, y sector piloto Chicureo–Piedra Roja.</p>
       
     </section>
-    <section class="fase wait">
-      <header><span class="chip wait">○ Pendiente</span><span class="gate gate-wait">G2</span></header>
+    <section class="fase ok">
+      <header><span class="chip ok">✓ Listo</span><span class="gate gate-ok">G2</span></header>
       <h3>4 · Diseño</h3>
-      
+      <p class="resumen">Workers + Static Assets + D1 (ADR-001 a ADR-004). Matriz de 29 casos con observable, 3 casos ocultos en el harness, 10 tareas y despliegue declarado (local + cloud + preview por ciclo).</p>
       
     </section>
-    <section class="fase wait">
-      <header><span class="chip wait">○ Pendiente</span><span class="gate gate-wait">G5</span></header>
+    <section class="fase run">
+      <header><span class="chip run">◐ En curso</span><span class="gate gate-wait">G5</span></header>
       <h3>5 · Implementación y pruebas</h3>
       
       
     </section></div>
 
-  
+  <h2>Tareas del ciclo</h2><ul class="lista"><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-1</span>
+      <span class="tk-titulo">El cocinero se registra</span>
+      <span class="tk-nota">C-01 · C-02 · C-03</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-2</span>
+      <span class="tk-titulo">El cocinero publica su hornada</span>
+      <span class="tk-nota">C-04 · C-05 · C-06 · C-07</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-3</span>
+      <span class="tk-titulo">El cliente descubre su sector</span>
+      <span class="tk-nota">C-08 · C-09 · C-29</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-4</span>
+      <span class="tk-titulo">La forma del listado (medición)</span>
+      <span class="tk-nota">C-10 · C-11 · C-12 · C-13 · va al final</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-5</span>
+      <span class="tk-titulo">Reservar sin sobreventa</span>
+      <span class="tk-nota">C-14 · C-15 · C-16 · C-17 · C-21 · tarea crítica</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-6</span>
+      <span class="tk-titulo">Retiro o despacho</span>
+      <span class="tk-nota">C-22 · C-23 · C-24</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-7</span>
+      <span class="tk-titulo">El panel del cocinero</span>
+      <span class="tk-nota">C-18 · C-19</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-8</span>
+      <span class="tk-titulo">El cliente sigue su pedido</span>
+      <span class="tk-nota">C-20</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-9</span>
+      <span class="tk-titulo">Reseñas y suspensión</span>
+      <span class="tk-nota">C-25 · C-26 · C-27 · C-28</span>
+    </li><li class="wait">
+      <span class="tk-estado">○</span>
+      <span class="tk-id">T-10</span>
+      <span class="tk-titulo">Cierre: suite completa</span>
+      <span class="tk-nota">no implementa nada</span>
+    </li></ul>
   <h2>Historias de usuario</h2><ul class="lista"><li class="wait">
       <span class="tk-estado">○</span>
       <span class="tk-id">HU-1</span>
@@ -188,8 +238,8 @@
       <h3>Etapa 1 · registro de cocineros + pedido de clientes</h3>
       <p class="resumen">Cerrar y verificar lo que ya está construido. Único ciclo en marcha.</p>
       <div class="fases" style="grid-template-columns:1fr; margin-top:14px">
-        <section class="fase wait" style="background:var(--surface2)">
-          <header><span class="chip wait">○ Pendiente</span><span class="gate">G5</span></header>
+        <section class="fase run" style="background:var(--surface2)">
+          <header><span class="chip run">◐ En curso</span><span class="gate">G5</span></header>
           <h3>Verificación independiente</h3>
           <p class="resumen">QA en contexto aislado, contra los criterios de la fase 3.</p>
         </section>
@@ -219,13 +269,13 @@
       </div>
   </div>
 
-  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li></ul></div>
+  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
 
   
 
   <footer>
-    <p><strong>Siguiente:</strong> Aprobación del usuario en G1 (mockup publicado + decisión sobre A4). Después: fase 4, diseño.</p>
-    <p>Actualizado 08-10-2026, 9:45 a. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
+    <p><strong>Siguiente:</strong> Correr el canario de capacidad del modelo y despachar T-1 (registro del cocinero) con TDD.</p>
+    <p>Actualizado 08-10-2026, 10:20 a. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
   </footer>
 
 </div>
