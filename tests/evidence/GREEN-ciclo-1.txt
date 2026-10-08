@@ -1,126 +1,120 @@
-✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2050.188084ms)
-[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
-
-    - Unexpected fields found in top-level field: "run_worker_first"
-
-
-[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
-
-    - Unexpected fields found in top-level field: "run_worker_first"
-
-
-✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (924.891625ms)
-[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
-
-    - Unexpected fields found in top-level field: "run_worker_first"
-
-
-✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1810.678084ms)
-✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.598375ms)
-✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.777125ms)
-✔ EX-404 · rutas de API que aún no existen responden 404 JSON (2.207875ms)
-✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (535.101542ms)
-ℹ tests 7
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2068.129833ms)
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (923.153833ms)
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1842.97725ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (3.2035ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (2.162166ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (544.182834ms)
+✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (17133.305ms)
+✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (911.120166ms)
+✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (912.247125ms)
+✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1793.983792ms)
+✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1802.25775ms)
+✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1790.7085ms)
+✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1798.934417ms)
+✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (907.431125ms)
+✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1797.925958ms)
+✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.4945ms)
+✔ C-08 · con 2 abiertas en el sector pedido y 1 en otro, devuelve exactamente esas 2 y sus desde vienen ascendentes (55065.931083ms)
+✔ EX-08a · cada ítem del listado trae id, pan, desde, hasta, disponibles, precio, modalidades, referencia_retiro y cocinero {id, nombre, promedio, resenas} (5.590917ms)
+✔ EX-08b · el listado devuelve como máximo 50 filas (límite del presupuesto de CPU del diseño) (3639.109208ms)
+✔ C-09 · sin cupo (disponibles = 0), con hasta en el pasado o estado cerrada no aparece en el listado (2673.695625ms)
+✔ EX-09a · una hornada cuyo desde todavía no llega pero hasta es futuro SÍ aparece (ventana vigente) (7.020792ms)
+✔ C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio con la invitación a cocinar y NO existe la lista de tarjetas (1747.185417ms)
+✔ EX-29a · GET /api/hornadas sin sector → 400 falta_sector (2.852417ms)
+✔ EX-29b · sector sin resultados → 200 { hornadas: [] } (el estado vacío es de la pantalla, no un error) (1.919792ms)
+✔ EX-29c · el listado se pinta en el DOM real con tarjetas #card-hornada y el cupo mostrado es el de la API (1239.733209ms)
+✔ C-14 · reservar 3 de 10 descuenta exactamente 3 (releído de la API y de D1) y trae donde (4121.45725ms)
+✔ C-15 · pedir 6 de 5 da 409 sin_cupo y el cupo queda idéntico antes y después (API y D1) (1858.942792ms)
+✔ C-16 · reservar el cupo exacto deja disponibles = 0 y estado = cerrada (API y D1) (927.872459ms)
+✖ C-17 · sin nombre da 400 falta_nombre y sin contacto da 400 falta_contacto; el cupo no cambia (1.730667ms)
+✖ C-21 · agotada y vencida (hasta en el pasado) rechazan reservas con 409 hornada_cerrada (0.812209ms)
+✖ EX-14a · reservar sobre una hornada inexistente da 404 no_existe (0.617833ms)
+✖ EX-14b · dos reservas de la misma hornada tienen códigos distintos; cada una nace reservada con total = unidades × precio (0.788916ms)
+✖ EX-17a · unidades 0, negativas o no enteras dan 400 unidades_invalidas y el cupo no cambia (0.646084ms)
+✖ EX-17b · la pantalla de reserva existe en el DOM real y al confirmar muestra el código y el donde (0.446584ms)
+ℹ tests 34
 ℹ suites 0
-ℹ pass 7
-ℹ fail 0
+ℹ pass 28
+ℹ fail 6
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 13913.132791
-exit=0
-
-
-== T-2 · GREEN (corrida completa `node --test tests/`, 17/17) ==
-✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2058.332167ms)
-✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (922.031292ms)
-✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1801.845ms)
-✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.412333ms)
-✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.634ms)
-✔ EX-404 · rutas de API que aún no existen responden 404 JSON (1.946875ms)
-✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (536.969417ms)
-✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (16401.548834ms)
-✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (912.510667ms)
-✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (900.074292ms)
-✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1792.47225ms)
-✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1818.200042ms)
-✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1786.291542ms)
-✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1796.017041ms)
-✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (916.224042ms)
-✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1788.799042ms)
-✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.450917ms)
-ℹ tests 17
-ℹ suites 0
-ℹ pass 17
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 28399.656209
-
----
-# GREEN-ciclo-1 — corrida tras cerrar T-3 (2026-10-08)
-# Comando   : node --test tests/
-# Resultado : 26 tests · 25 pass · 1 fail
-# El 1 fail es el ciclo-1 sellado EX-404 (tests/ciclo-1.test.mjs:108-114),
-# que exigía GET /api/hornadas?sector=x → 404 no_existe como ruta todavía
-# inexistente. T-3 implementa esa ruta con el contrato de 04-DISENO.md
-# (C-08/C-09/C-29 → 200/400), así que el sello quedó desactualizado por
-# diseño. No se debilitó ninguna aserción; el conflicto se reporta como
-# BLOQUEO en el cierre de T-3 para que Hermes decida (el sello es suyo).
-# Salida completa de esta corrida, a continuación.
----
-✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (2060.468583ms)
-✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (919.355334ms)
-✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1803.715292ms)
-✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.84225ms)
-✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.651291ms)
-✖ EX-404 · rutas de API que aún no existen responden 404 JSON (3.066458ms)
-✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (540.05425ms)
-✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (16875.001875ms)
-✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (917.366916ms)
-✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (913.142583ms)
-✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1790.99075ms)
-✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1785.75625ms)
-✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1797.924625ms)
-✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1785.164084ms)
-✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (913.61225ms)
-✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1798.574167ms)
-✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.493459ms)
-✔ C-08 · con 2 abiertas en el sector pedido y 1 en otro, devuelve exactamente esas 2 y sus desde vienen ascendentes (54723.703458ms)
-✔ EX-08a · cada ítem del listado trae id, pan, desde, hasta, disponibles, precio, modalidades, referencia_retiro y cocinero {id, nombre, promedio, resenas} (5.34075ms)
-✔ EX-08b · el listado devuelve como máximo 50 filas (límite del presupuesto de CPU del diseño) (3607.74775ms)
-✔ C-09 · sin cupo (disponibles = 0), con hasta en el pasado o estado cerrada no aparece en el listado (2682.096833ms)
-✔ EX-09a · una hornada cuyo desde todavía no llega pero hasta es futuro SÍ aparece (ventana vigente) (6.724791ms)
-✔ C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio con la invitación a cocinar y NO existe la lista de tarjetas (1744.86675ms)
-✔ EX-29a · GET /api/hornadas sin sector → 400 falta_sector (3.090667ms)
-✔ EX-29b · sector sin resultados → 200 { hornadas: [] } (el estado vacío es de la pantalla, no un error) (2.999208ms)
-✔ EX-29c · el listado se pinta en el DOM real con tarjetas #card-hornada y el cupo mostrado es el de la API (1241.372542ms)
-ℹ tests 26
-ℹ suites 0
-ℹ pass 25
-ℹ fail 1
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 71316.397292
+ℹ duration_ms 71720.574542
 
 ✖ failing tests:
 
-test at tests/ciclo-1.test.mjs:108:1
-✖ EX-404 · rutas de API que aún no existen responden 404 JSON (3.066458ms)
-  AssertionError [ERR_ASSERTION]: EX-404 · esperaia 404, llego 200
-  
-  200 !== 404
-  
-      at TestContext.<anonymous> (file:///Users/christianbobadilla/CodeLab/Hornada/tests/ciclo-1.test.mjs:111:10)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.run (node:internal/test_runner/test:1409:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 200,
-    expected: 404,
-    operator: 'strictEqual',
-    diff: 'simple'
+test at tests/t5-reservas.test.mjs:350:1
+✖ C-17 · sin nombre da 400 falta_nombre y sin contacto da 400 falta_contacto; el cupo no cambia (1.730667ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: read ECONNRESET
+        at TCP.onStreamRead (node:internal/stream_base_commons:221:20) {
+      errno: -54,
+      code: 'ECONNRESET',
+      syscall: 'read'
+    }
+  }
+
+test at tests/t5-reservas.test.mjs:392:1
+✖ C-21 · agotada y vencida (hasta en el pasado) rechazan reservas con 409 hornada_cerrada (0.812209ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: connect ECONNREFUSED 127.0.0.1:8787
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 8787
+    }
+  }
+
+test at tests/t5-reservas.test.mjs:451:1
+✖ EX-14a · reservar sobre una hornada inexistente da 404 no_existe (0.617833ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: connect ECONNREFUSED 127.0.0.1:8787
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 8787
+    }
+  }
+
+test at tests/t5-reservas.test.mjs:464:1
+✖ EX-14b · dos reservas de la misma hornada tienen códigos distintos; cada una nace reservada con total = unidades × precio (0.788916ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: connect ECONNREFUSED 127.0.0.1:8787
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 8787
+    }
+  }
+
+test at tests/t5-reservas.test.mjs:497:1
+✖ EX-17a · unidades 0, negativas o no enteras dan 400 unidades_invalidas y el cupo no cambia (0.646084ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: connect ECONNREFUSED 127.0.0.1:8787
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 8787
+    }
+  }
+
+test at tests/t5-reservas.test.mjs:522:1
+✖ EX-17b · la pantalla de reserva existe en el DOM real y al confirmar muestra el código y el donde (0.446584ms)
+  [TypeError [Error]: fetch failed] {
+    [cause]: Error: connect ECONNREFUSED 127.0.0.1:8787
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 8787
+    }
   }
