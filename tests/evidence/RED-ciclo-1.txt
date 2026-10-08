@@ -34,3 +34,10 @@
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 28878.313833
+
+# ---------------- T-8 (missa: C-20) · RED antes de implementar ----------------
+node --test tests/ -> tests 49 / pass 46 / fail 3 (los 46 sellados quedan verdes)
+# RED:
+✖ C-20  el codigo devuelve SU reserva...  actual 404, expected 200 (GET /api/reservas/:codigo no existe)
+✖ C-20b relectura por codigo dice entregada  actual 404, expected 200 (mismo endpoint)
+✖ EX-T8 pantalla #mi-reserva se abre con el codigo  actual null (no existe en el DOM), expected visible
