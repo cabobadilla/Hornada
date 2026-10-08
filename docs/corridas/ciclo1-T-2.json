@@ -1,0 +1,27 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-2",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "a6c7a03 tests(T-2) en RED",
+    "98eae4b fix wrangler.jsonc",
+    "d8a7a7f POST /api/hornadas",
+    "0c32d50 pantalla Mi hornada",
+    "5112d79 evidencia"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "verificacion_de_hermes": {
+    "sello": "seal-from-commit a6c7a03 + verify → INTACTOS (los sellados de T-1 tampoco se tocaron: diff vacío)",
+    "red_reproducido": "verify-red a6c7a03 con la guardia v0.38 (worktree fuera del proyecto) → falla por aserción, sin errores de runtime",
+    "verde": "17/17 en el árbol actual; el warning de run_worker_first desapareció",
+    "mutacion": [
+      "renombrar el error de C-06 → C-06 rojo",
+      "el cupo nace en unidades-1 → C-05 rojo"
+    ],
+    "review": "review.sh: consistente, sin marcadores de RED"
+  }
+}

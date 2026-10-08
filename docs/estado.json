@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T14:05:00Z",
+  "actualizado": "2026-10-08T14:45:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — T-1 verificada por Hermes (G3 ✅)",
-  "siguiente": "Despachar T-2 (publicar hornada), empezando por el fix del binding run_worker_first.",
+  "fase_actual": "Implementación — T-2 verificada por Hermes (G3 ✅)",
+  "siguiente": "Despachar T-3 (el cliente descubre las hornadas de su sector).",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 1,
+      "evaluado": 2,
       "rechazo": 0
     },
     "G4": {
@@ -95,13 +95,13 @@
     {
       "id": "T-2",
       "titulo": "El cocinero publica su hornada",
-      "estado": "pendiente",
-      "nota": "C-04 · C-05 · C-06 · C-07"
+      "estado": "listo",
+      "nota": "C-04 · C-05 · C-06 · C-07 (+6 extras) · sello INTACTOS · RED reproducido · 2 mutaciones muerden · warning de wrangler corregido"
     },
     {
       "id": "T-3",
       "titulo": "El cliente descubre su sector",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-08 · C-09 · C-29"
     },
     {
