@@ -142,6 +142,23 @@
 
       <div id="mi-reserva-contenido"></div>
 
+      <form id="form-resena" hidden>
+        <label for="campo-resena-estrellas">Calificar: cuántas estrellas se ganó la hornada.</label>
+        <select id="campo-resena-estrellas" name="estrellas">
+          <option value="">Elegí de 1 a 5 estrellas</option>
+          <option value="1">★ 1 — no vuelvo</option>
+          <option value="2">★ 2 — me decepcionó</option>
+          <option value="3">★ 3 — regular</option>
+          <option value="4">★ 4 — bueno</option>
+          <option value="5">★ 5 — pan de otro nivel</option>
+        </select>
+
+        <label for="campo-resena-comentario">Comentario (opcional): qué tal estaba el pan.</label>
+        <input id="campo-resena-comentario" name="comentario" type="text" placeholder="Tibio, puntual, tierno...">
+
+        <button type="submit">Enviar mi calificación</button>
+      </form>
+
       <p id="mensaje-mi-reserva" class="mensaje" role="status"></p>
     </section>
 

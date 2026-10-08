@@ -402,6 +402,56 @@ async function miReserva() {
       ventana.className = 'mi-reserva-ventana';
       ventana.textContent = r.hornada ? `Sale del horno ${horario(r.hornada.desde)} · retiro hasta ${horario(r.hornada.hasta)}` : '';
       contenido.append(estado, pedido, dondeL, ventana);
+
+      // T-9 (C-25): el formulario de calificación aparece SOLO si el pan ya
+      // se entregó y esa reserva todavía no tiene reseña (puede_calificar).
+      const formResena = document.getElementById('form-resena');
+      if (formResena) {
+        if (r.puede_calificar) {
+          formResena.hidden = false;
+          const estrellas = formResena.estrellas;
+          if (!estrellas.dataset.conEnviador) {
+            estrellas.dataset.conEnviador = '1';
+            formResena.addEventListener('submit', async (ev) => {
+              ev.preventDefault();
+              mensaje.textContent = '';
+              const puntaje = Number(estrellas.value);
+              if (!Number.isInteger(puntaje) || puntaje < 1 || puntaje > 5) {
+                mensaje.textContent = 'Elegí de 1 a 5 estrellas para calificar.';
+                estrellas.focus();
+                return;
+              }
+              try {
+                const resResena = await fetch(`/api/reservas/${encodeURIComponent(codigo.trim())}/resena`, {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({
+                    estrellas: puntaje,
+                    comentario: formResena.comentario.value.trim() || undefined,
+                  }),
+                });
+                const bodyResena = await resResena.json();
+                if (resResena.status === 201) {
+                  mensaje.textContent = '¡Gracias por calificar! El barrio ya ve tu opinión.';
+                  formResena.reset();
+                  formResena.hidden = true;
+                } else if (bodyResena?.error === 'ya_calificada') {
+                  mensaje.textContent = 'Esta reserva ya se calificó: una sola vez por reserva.';
+                  formResena.hidden = true;
+                } else if (bodyResena?.error === 'estrellas_invalidas') {
+                  mensaje.textContent = 'Las estrellas van de 1 a 5: revisá tu calificación.';
+                } else {
+                  mensaje.textContent = 'No se pudo enviar la calificación — pruebe nuevamente.';
+                }
+              } catch {
+                mensaje.textContent = 'No se pudo enviar la calificación — pruebe nuevamente.';
+              }
+            });
+          }
+        } else {
+          formResena.hidden = true;
+        }
+      }
     } else if (body?.error === 'no_existe') {
       mensaje.textContent = 'Ese código de reserva no existe: revisá el que te dio la confirmación.';
     } else {
@@ -436,6 +486,14 @@ async function panelCocinero() {
 
   const render = (body) => {
     contenido.textContent = '';
+    // T-9 (C-28): si el cocinero está suspendido el panel se lo dice con su motivo,
+    // pero sus hornadas y sus reservas vigentes siguen listadas ahí.
+    if (body?.cocinero?.suspendido && body.cocinero.motivo_suspension) {
+      const aviso = document.createElement('p');
+      aviso.className = 'panel-suspension';
+      aviso.textContent = `Cuenta suspendida: ${body.cocinero.motivo_suspension}`;
+      contenido.appendChild(aviso);
+    }
     const hornadas = body?.hornadas ?? [];
     hornadas.forEach((h) => {
       const card = document.createElement('div');

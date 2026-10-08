@@ -371,3 +371,88 @@ node --test tests/ (sin flags) -> tests 49 / pass 49 / fail 0, exit code 0
 #         ?codigo=, muestra estado, unidades, total (2400), donde y el pan
 # Commit de tests (RED): 8b0b4fb — no se tocaron después.
 # -------------------------------------------------------------
+
+===============================================================
+T-9 — reseñas y suspensión · node --test tests/ · 2026-10-08T17:36:47Z
+===============================================================
+
+===============================================================
+T-9 — reseñas y suspensión (HU-9: C-25, C-26, C-27, C-28) · node --test tests/ sin flags · exit 0 · 2026-10-08T17:39:21Z
+---------------------------------------------------------------
+# RED (commit de tests 9e5acc1): 6/7 rojos — POST /api/reservas/:codigo/resena
+# inexistente devolvía 404 no_existe (C-25/C-26/C-27 sin precondición), el
+# panel no traía motivo_suspension (C-28) y #mi-reserva no ofrecía el form
+# de calificación (EX-T9). C-25b pasaba (404 no_existe ya existía de T-8).
+# Ajuste de test propio (commit 5f39335): el guard de C-26 usa
+# sqlite_master.sql en vez de pragma_table_info(...) — wrangler d1 execute
+#rechaza la tvf con 'not authorized: SQLITE_AUTH' (medido con wrangler dev);
+#el sql de CREATE TABLE declara todas las columnas, así que el escaneo es una
+#lectura equivalente; y se agregó guardia de que existan las 4 tablas.
+# Corrección en C-25 (commit 68b14cd): subconsulta pedía hornada.id en vez
+# de hornadas.cocinero_id — error del Coder en su propio caso, verificado
+# contra D1 (subconsulta 0, literal 1); no debilitó ninguna aserción.
+---------------------------------------------------------------
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (3117.507875ms)
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (949.072334ms)
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1851.828708ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.350292ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.516625ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (544.213958ms)
+✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (56919.900792ms)
+✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (918.75025ms)
+✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (917.577125ms)
+✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1803.388ms)
+✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1795.773375ms)
+✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1801.917042ms)
+✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1821.983667ms)
+✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (912.04475ms)
+✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1807.575667ms)
+✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.533875ms)
+✔ C-08 · con 2 abiertas en el sector pedido y 1 en otro, devuelve exactamente esas 2 y sus desde vienen ascendentes (90594.4065ms)
+✔ EX-08a · cada ítem del listado trae id, pan, desde, hasta, disponibles, precio, modalidades, referencia_retiro y cocinero {id, nombre, promedio, resenas} (6.80575ms)
+✔ EX-08b · el listado devuelve como máximo 50 filas (límite del presupuesto de CPU del diseño) (3636.130083ms)
+✔ C-09 · sin cupo (disponibles = 0), con hasta en el pasado o estado cerrada no aparece en el listado (2695.071208ms)
+✔ EX-09a · una hornada cuyo desde todavía no llega pero hasta es futuro SÍ aparece (ventana vigente) (6.862125ms)
+✔ C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio con la invitación a cocinar y NO existe la lista de tarjetas (1747.87425ms)
+✔ EX-29a · GET /api/hornadas sin sector → 400 falta_sector (1.962083ms)
+✔ EX-29b · sector sin resultados → 200 { hornadas: [] } (el estado vacío es de la pantalla, no un error) (2.058ms)
+✔ EX-29c · el listado se pinta en el DOM real con tarjetas #card-hornada y el cupo mostrado es el de la API (1244.152583ms)
+✔ C-14 · reservar 3 de 10 descuenta exactamente 3 (releído de la API y de D1) y trae donde (10451.014333ms)
+✔ C-15 · pedir 6 de 5 da 409 sin_cupo y el cupo queda idéntico antes y después (API y D1) (1821.529458ms)
+✔ C-16 · reservar el cupo exacto deja disponibles = 0 y estado = cerrada (API y D1) (908.524209ms)
+✔ C-17 · sin nombre da 400 falta_nombre y sin contacto da 400 falta_contacto; el cupo no cambia (916.5195ms)
+✔ C-21 · agotada y vencida (hasta en el pasado) rechazan reservas con 409 hornada_cerrada (3657.599416ms)
+✔ EX-14a · reservar sobre una hornada inexistente da 404 no_existe (2.821042ms)
+✔ EX-14b · dos reservas de la misma hornada tienen códigos distintos; cada una nace reservada con total = unidades × precio (1815.420625ms)
+✔ EX-17a · unidades 0, negativas o no enteras dan 400 unidades_invalidas y el cupo no cambia (920.2835ms)
+✔ EX-17b · la pantalla de reserva existe en el DOM real y al confirmar muestra el código y el donde (1977.549833ms)
+✔ C-22 · hornada solo retiro + reserva despacho da 400 modalidad_no_ofrecida y el cupo no se toca (73602.510292ms)
+✔ C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y guardada exacta en D1 (3614.035416ms)
+✔ C-24 · retiro sin direccion da 201 con donde === referencia_retiro de la hornada (912.931167ms)
+✔ EX-22a · hornada que solo ofrece despacho + reserva retiro da 400 modalidad_no_ofrecida y el cupo queda intacto (1802.494291ms)
+✔ EX-23a · la pantalla solo ofrece las modalidades de la hornada y el campo dirección aparece solo con despacho (1310.593167ms)
+✔ C-18 · el panel lista las reservas de las hornadas del cocinero y solo las suyas (83384.437166ms)
+✔ C-18b · con un token que no es de ningún cocinero el panel devuelve 403 token_invalido (1.602791ms)
+✔ C-19 · marcar entregado persiste: se relee el panel y la reserva sigue entregada (1807.176292ms)
+✔ C-19b · la reserva de otro cocinero no se puede marcar: 403 no_es_tu_reserva (1808.868833ms)
+✔ C-23b · una reserva de despacho aparece en el panel con su dirección de entrega (10.04075ms)
+✔ EX-T7 · sin id de reserva existente, entregado da 404 no_existe (3.330084ms)
+✔ EX-T7 · la pantalla del panel (#panel-cocinero) se abre con el token y muestra sus reservas con botón entregado (1052.553916ms)
+✔ C-20 · el codigo devuelve SU reserva: estado, unidades, modalidad, donde y los datos de su hornada (51600.020958ms)
+✔ C-20b · tras marcarla entregada (T-7), la relectura por codigo muestra estado entregada (923.418417ms)
+✔ EX-T8 · la pantalla #mi-reserva se abre con el codigo y muestra estado, unidades, total, donde y la hornada (1055.782209ms)
+✔ C-25 · solo reserva entregada, una sola vez: 409 no_entregada → 201 → 409 ya_calificada; estrellas fuera de 1..5 → 400 sin fila nueva (28250.891791ms)
+✔ C-25b · un codigo de reserva inexistente da 404 no_existe (3.0965ms)
+✔ C-26 · el promedio y la cantidad se derivan en la lectura: 2 reseñas (5 y 4) → promedio 4.5 y resenas 2, sin columnas de promedio en D1 (3642.074542ms)
+✔ C-27a · 5 reseñas de 1 estrella → fuera del listado del sector y 403 cocinero_suspendido al publicar (4575.796958ms)
+✔ C-27b · el borde del umbral: con 4 reseñas de 1 estrella el cocinero SIGUE visible (el umbral es 5, no 4) (3638.349333ms)
+✔ C-28 · suspendido: el panel sigue mostrando sus reservas vigentes y trae motivo_suspension (6421.619417ms)
+✔ EX-T9 · el formulario de calificación aparece en #mi-reserva SOLO cuando puede_calificar (2567.094625ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106878.067458

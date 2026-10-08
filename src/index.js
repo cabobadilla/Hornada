@@ -8,6 +8,29 @@ const notFound = () => json({ error: 'no_existe' }, 404);
 
 const MODALIDADES = ['retiro', 'despacho'];
 
+// T-9 (HU-9, C-27): la regla de suspensión, declarada con su umbral.
+// Un cocinero con ≥ 5 reseñas y promedio < 3,0 está suspendido. Se evalúa
+// SIEMPRE en la lectura (agregando sobre `resenas`): no hay flag ni columna
+// que se pueda desincronizar — borrar/limpiar reseñas lo devuelve solo.
+const UMBRAL_RESENAS = 5;
+const UMBRAL_PROMEDIO = 3.0;
+const MOTIVO_SUSPENSION =
+  'Suspendido por calidad: acumuló 5 o más reseñas con promedio menor a 3,0. ' +
+  'Tus hornadas dejaron de aparecer en el listado y no aceptan reservas nuevas; ' +
+  'las reservas ya hechas siguen vigentes.';
+
+const suspensionDe = async (env, cocineroId) => {
+  const fila = await env.DB.prepare(
+    'SELECT COUNT(*) AS resenas, AVG(estrellas) AS promedio FROM resenas WHERE cocinero_id = ?1',
+  )
+    .bind(cocineroId)
+    .first();
+  const resenas = fila?.resenas ?? 0;
+  const promedio = fila?.promedio === null || fila?.promedio === undefined ? null : Number(fila.promedio);
+  const suspendido = resenas >= UMBRAL_RESENAS && promedio !== null && promedio < UMBRAL_PROMEDIO;
+  return { resenas, promedio, suspendido };
+};
+
 const parsearModalidades = (crudo) => {
   let lista = crudo;
   if (typeof crudo === 'string') {
@@ -58,6 +81,12 @@ export default {
       return reservar(request, env, decodeURIComponent(reserva[1]));
     }
 
+    // T-9 (HU-9): el cliente con reserva entregada califica (C-25).
+    const resena = url.pathname.match(/^\/api\/reservas\/([^/]+)\/resena$/);
+    if (request.method === 'POST' && resena) {
+      return crearResena(request, env, decodeURIComponent(resena[1]));
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/hornadas') {
       return listarHornadas(url, env);
     }
@@ -96,6 +125,8 @@ async function listarHornadas(url, env) {
             (SELECT AVG(r.estrellas) FROM resenas r WHERE r.cocinero_id = c.id) AS promedio
      FROM hornadas h JOIN cocineros c ON c.id = h.cocinero_id
      WHERE c.sector = ?1 AND h.estado = 'abierta' AND h.disponibles > 0 AND h.hasta > ?2
+       AND NOT ( (SELECT COUNT(*) FROM resenas r WHERE r.cocinero_id = c.id) >= 5
+                 AND (SELECT AVG(r2.estrellas) FROM resenas r2 WHERE r2.cocinero_id = c.id) < 3.0 )
      ORDER BY h.desde ASC
      LIMIT 50`,
   )
@@ -180,6 +211,11 @@ async function publicarHornada(request, env) {
     ? (await env.DB.prepare('SELECT id FROM cocineros WHERE token = ?').bind(token).first())
     : null;
   if (!cocinero) return json({ error: 'token_invalido' }, 403);
+
+  // T-9 (C-27): un cocinero suspendido no publica hornadas nuevas. Se evalúa en
+  // la lectura (agregado sobre reseñas), no con un flag escrito.
+  const suspension = await suspensionDe(env, cocinero.id);
+  if (suspension.suspendido) return json({ error: 'cocinero_suspendido', motivo: MOTIVO_SUSPENSION }, 403);
 
   const abierta = await env.DB.prepare(
     `SELECT id FROM hornadas WHERE cocinero_id = ? AND estado = 'abierta' LIMIT 1`,
@@ -304,11 +340,26 @@ async function reservar(request, env, hornadaId) {
     typeof datos.direccion === 'string' && datos.direccion.trim() ? datos.direccion.trim() : null;
 
   const hornada = await env.DB.prepare(
-    'SELECT id, estado, hasta, precio, modalidades, referencia_retiro FROM hornadas WHERE id = ?1',
+    `SELECT h.id, h.estado, h.hasta, h.precio, h.modalidades, h.referencia_retiro,
+            h.cocinero_id,
+            (SELECT COUNT(*) FROM resenas r WHERE r.cocinero_id = h.cocinero_id) AS resenas_cocinero,
+            (SELECT AVG(r2.estrellas) FROM resenas r2 WHERE r2.cocinero_id = h.cocinero_id) AS promedio_cocinero
+     FROM hornadas h WHERE h.id = ?1`,
   )
     .bind(hornadaId)
     .first();
   if (!hornada) return notFound();
+
+  // T-9 (C-27): las hornadas de un cocinero suspendido dejan de aceptar reservas
+  // — también se evalúa en la lectura. El cocinero puede desaparecer del listado
+  // pero su id sigue circulando: el endpoint no vuelve a crear la entrada.
+  if (
+    Number(hornada.resenas_cocinero) >= UMBRAL_RESENAS &&
+    hornada.promedio_cocinero !== null &&
+    Number(hornada.promedio_cocinero) < UMBRAL_PROMEDIO
+  ) {
+    return json({ error: 'cocinero_suspendido', motivo: MOTIVO_SUSPENSION }, 409);
+  }
 
   const ahora = new Date().toISOString();
   if (hornada.estado !== 'abierta' || hornada.hasta <= ahora) {
@@ -425,12 +476,18 @@ async function miPanel(url, env) {
     });
   }
 
+  // T-9 (C-28): la suspensión evalúa en la lectura y NUNCA borra reservas —
+  // el panel del suspendido sigue mostrando todo el pan que prometió.
+  const susp = await suspensionDe(env, cocinero.id);
+
   return json({
     cocinero: {
       nombre: cocinero.nombre,
       sector: cocinero.sector,
       promedio: cocinero.promedio === null ? null : Number(cocinero.promedio),
       resenas: cocinero.resenas,
+      suspendido: susp.suspendido,
+      motivo_suspension: susp.suspendido ? MOTIVO_SUSPENSION : null,
     },
     hornadas: (hornadas.results ?? []).map((h) => ({
       id: h.id,
@@ -517,4 +574,60 @@ async function consultarReserva(env, codigo) {
       },
     },
   });
+}
+
+// T-9 (HU-9, C-25): la calificación. Solo un cliente con reserva ENTREGADA
+// califica, UNA sola vez por reserva (resenas.reserva_id es UNIQUE), la fila
+// sale con su reserva_id, cocinero_id y creada_en. La regla de 1..5 es un
+// umbral del diseño: fuera de rango → 400 y sin fila nueva.
+async function crearResena(request, env, codigo) {
+  let datos = null;
+  try {
+    datos = await request.json();
+  } catch {
+    return json({ error: 'json_invalido' }, 400);
+  }
+  if (!datos || typeof datos !== 'object') {
+    return json({ error: 'json_invalido' }, 400);
+  }
+
+  const fila = await env.DB.prepare(
+    `SELECT r.id, r.estado, h.cocinero_id
+     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
+     WHERE r.codigo = ?1`,
+  )
+    .bind(codigo)
+    .first();
+  if (!fila) return notFound();
+
+  // Umbral declarado: estrellas entero en 1..5. La validez de la entrada se
+  // revisa ANTES del estado: un puntaje imposible ni siquiera llega a mirar el pan.
+  const estrellas = datos.estrellas;
+  if (!Number.isInteger(estrellas) || estrellas < 1 || estrellas > 5) {
+    return json({ error: 'estrellas_invalidas' }, 400);
+  }
+
+  // El pan no llegó: no hay calificación que valga (C-25).
+  if (fila.estado !== 'entregada') {
+    return json({ error: 'reserva_no_entregada' }, 409);
+  }
+
+  // Una sola vez por reserva: el CHECK/UNIQUE del esquema y este guard coinciden.
+  const previa = await env.DB.prepare('SELECT id FROM resenas WHERE reserva_id = ?1')
+    .bind(fila.id)
+    .first();
+  if (previa) return json({ error: 'ya_calificada' }, 409);
+
+  const comentario =
+    typeof datos.comentario === 'string' && datos.comentario.trim() ? datos.comentario.trim() : null;
+
+  const id = crypto.randomUUID();
+  await env.DB.prepare(
+    `INSERT INTO resenas (id, reserva_id, cocinero_id, estrellas, comentario, creada_en)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+  )
+    .bind(id, fila.id, fila.cocinero_id, estrellas, comentario, new Date().toISOString())
+    .run();
+
+  return json({ resena: { estrellas } }, 201);
 }
