@@ -279,3 +279,52 @@ comando: node --test tests/t5-reservas.test.mjs
 ℹ todo 0
 ℹ duration_ms 22456.753083
 ---- fin t5 solo ------------------------------
+
+===== T-6b · node --test tests/ (sin flags) · commit 79f43ab · 2026-10-08 13:43 =====
+✔ C-01 · el formulario de registro existe en el DOM real con sus 4 campos (nombre, sector, referencia_retiro, foto_url) (18183.419916ms)
+✔ C-02 · alta válida responde 201 con cocinero.token y el cocinero queda asociado a su sector (916.435084ms)
+✔ C-03 · sin nombre → 400 falta_nombre; sin sector → 400 falta_sector; y el cocinero no se crea (1801.574041ms)
+✔ EX-02a · nombre vacío o solo espacios también es falta_nombre (2.817209ms)
+✔ EX-02b · body no JSON o vacío se rechaza sin crear nada (1.683709ms)
+✔ EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario (540.725625ms)
+✔ C-04 · la pantalla "Mi hornada" existe en el DOM real con sus campos (pan, desde, hasta, unidades, precio, modalidades, referencia_retiro) (3120.465084ms)
+✔ C-05 · publicar con token válido → 201, disponibles === unidades y estado abierta (API y D1) (922.167041ms)
+✔ C-06 · una segunda hornada abierta del mismo cocinero → 409 ya_tiene_hornada_abierta y sigue habiendo una sola abierta (913.364875ms)
+✔ C-07 · unidades 0 → 400 unidades_invalidas y precio 0 → 400 precio_invalido; ninguna crea hornada (1808.78375ms)
+✔ EX-05a · token inválido → 403 token_invalido (con d1 sin hornadas nuevas) (1802.614125ms)
+✔ EX-05b · sin pan o sin referencia_retiro → 400 con el campo señalado y nada creado (1819.9795ms)
+✔ EX-05c · modalidades vacía o con valores fuera de retiro|despacho → 400 modalidades_invalidas (1799.618916ms)
+✔ EX-06a · la segunda hornada rechazada no deja filas: el cocinero de C-05 sigue exactamente con su única abierta (912.322375ms)
+✔ EX-07a · precio no entero (1500.5) o unidades no entera (10.5) → 400 unidad/precio_invalidos (1836.857667ms)
+✔ EX-404a · GET /api/hornadas/:id inexistente → 404 no_existe (JSON) (2.44825ms)
+✔ C-08 · con 2 abiertas en el sector pedido y 1 en otro, devuelve exactamente esas 2 y sus desde vienen ascendentes (36063.51825ms)
+✔ EX-08a · cada ítem del listado trae id, pan, desde, hasta, disponibles, precio, modalidades, referencia_retiro y cocinero {id, nombre, promedio, resenas} (6.2335ms)
+✔ EX-08b · el listado devuelve como máximo 50 filas (límite del presupuesto de CPU del diseño) (3622.211958ms)
+✔ C-09 · sin cupo (disponibles = 0), con hasta en el pasado o estado cerrada no aparece en el listado (2698.107166ms)
+✔ EX-09a · una hornada cuyo desde todavía no llega pero hasta es futuro SÍ aparece (ventana vigente) (6.710917ms)
+✔ C-29 · pantalla del listado: sector sin hornadas muestra #estado-vacio con la invitación a cocinar y NO existe la lista de tarjetas (1745.940375ms)
+✔ EX-29a · GET /api/hornadas sin sector → 400 falta_sector (3.249375ms)
+✔ EX-29b · sector sin resultados → 200 { hornadas: [] } (el estado vacío es de la pantalla, no un error) (2.231334ms)
+✔ EX-29c · el listado se pinta en el DOM real con tarjetas #card-hornada y el cupo mostrado es el de la API (1243.71175ms)
+✔ C-14 · reservar 3 de 10 descuenta exactamente 3 (releído de la API y de D1) y trae donde (49776.191541ms)
+✔ C-15 · pedir 6 de 5 da 409 sin_cupo y el cupo queda idéntico antes y después (API y D1) (1795.352583ms)
+✔ C-16 · reservar el cupo exacto deja disponibles = 0 y estado = cerrada (API y D1) (907.96375ms)
+✔ C-17 · sin nombre da 400 falta_nombre y sin contacto da 400 falta_contacto; el cupo no cambia (902.814917ms)
+✔ C-21 · agotada y vencida (hasta en el pasado) rechazan reservas con 409 hornada_cerrada (3588.537417ms)
+✔ EX-14a · reservar sobre una hornada inexistente da 404 no_existe (2.694167ms)
+✔ EX-14b · dos reservas de la misma hornada tienen códigos distintos; cada una nace reservada con total = unidades × precio (1795.421291ms)
+✔ EX-17a · unidades 0, negativas o no enteras dan 400 unidades_invalidas y el cupo no cambia (992.43225ms)
+✔ EX-17b · la pantalla de reserva existe en el DOM real y al confirmar muestra el código y el donde (1963.457834ms)
+✔ C-22 · hornada solo retiro + reserva despacho da 400 modalidad_no_ofrecida y el cupo no se toca (26263.332375ms)
+✔ C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y guardada exacta en D1 (3621.34375ms)
+✔ C-24 · retiro sin direccion da 201 con donde === referencia_retiro de la hornada (912.092125ms)
+✔ EX-22a · hornada que solo ofrece despacho + reserva retiro da 400 modalidad_no_ofrecida y el cupo queda intacto (1814.074125ms)
+✔ EX-23a · la pantalla solo ofrece las modalidades de la hornada y el campo dirección aparece solo con despacho (1304.829125ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68436.18025

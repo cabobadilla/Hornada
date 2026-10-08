@@ -217,9 +217,7 @@ test('C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y
   // derivado (modalidad despacho → direccion; retiro → referencia_retiro).
   // No se usa GET /api/reservas/:codigo: ese endpoint es de T-8.
   const fila = d1(
-    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde
-     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
-     WHERE r.codigo = '${reserva.codigo}'`,
+    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde FROM reservas r JOIN hornadas h ON h.id = r.hornada_id WHERE r.codigo = '${reserva.codigo}'`,
   );
   assert.equal(fila.length, 1, 'C-23 · la reserva debe existir en D1 por su código');
   assert.equal(fila[0].modalidad, 'despacho', "C-23 · la reserva releída debe traer modalidad despacho");
@@ -276,9 +274,7 @@ test('C-24 · retiro sin direccion da 201 con donde === referencia_retiro de la 
   // GET /api/reservas/:codigo: ese endpoint es de T-8): retiro guarda
   // la referencia de retiro derivada y sin direccion.
   const fila = d1(
-    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde
-     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
-     WHERE r.codigo = '${reserva.codigo}'`,
+    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde FROM reservas r JOIN hornadas h ON h.id = r.hornada_id WHERE r.codigo = '${reserva.codigo}'`,
   );
   assert.equal(fila.length, 1, 'C-24 · la reserva debe existir en D1');
   assert.equal(fila[0].modalidad, 'retiro', "C-24 · la reserva releída debe traer modalidad retiro");

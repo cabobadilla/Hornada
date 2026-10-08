@@ -278,16 +278,16 @@ async function reservar(request, env, hornadaId) {
     return json({ error: 'unidades_invalidas' }, 400);
   }
 
-  // En T-5 solo retiro: el despacho llega con T-6 (C-22, C-23).
-  const modalidad =
+  // T-6 (HU-8): la modalidad la ofrece la hornada, no el cliente. Se valida
+  // contra su columna `modalidades` ANTES de tocar el cupo (C-22).
+  let modalidad =
     typeof datos.modalidad === 'string' && datos.modalidad.trim() ? datos.modalidad.trim() : 'retiro';
-  if (modalidad !== 'retiro') return json({ error: 'modalidad_no_ofrecida' }, 400);
 
   const direccion =
     typeof datos.direccion === 'string' && datos.direccion.trim() ? datos.direccion.trim() : null;
 
   const hornada = await env.DB.prepare(
-    'SELECT id, estado, hasta, precio, referencia_retiro FROM hornadas WHERE id = ?1',
+    'SELECT id, estado, hasta, precio, modalidades, referencia_retiro FROM hornadas WHERE id = ?1',
   )
     .bind(hornadaId)
     .first();
@@ -297,6 +297,19 @@ async function reservar(request, env, hornadaId) {
   if (hornada.estado !== 'abierta' || hornada.hasta <= ahora) {
     return json({ error: 'hornada_cerrada' }, 409);
   }
+
+  const ofrecidas = String(hornada.modalidades).split(',').filter(Boolean);
+  if (!ofrecidas.includes(modalidad)) {
+    return json({ error: 'modalidad_no_ofrecida' }, 400);
+  }
+
+  // C-23: el despacho exige dirección; el retiro no la pide.
+  if (modalidad === 'despacho' && !direccion) {
+    return json({ error: 'falta_direccion' }, 400);
+  }
+
+  // donde = referencia_retiro del cocinero | la dirección del despacho (C-24, C-23).
+  const donde = modalidad === 'despacho' ? direccion : hornada.referencia_retiro;
 
   // La regla del cupo, que es todo el producto (04-DISENO): una sola sentencia
   // atómica. La base decide, no el Worker: si meta.changes !== 1 → 409 sin_cupo.
@@ -337,7 +350,7 @@ async function reservar(request, env, hornadaId) {
         unidades: datos.unidades,
         total,
         modalidad,
-        donde: modalidad === 'despacho' ? direccion : hornada.referencia_retiro,
+        donde,
       },
     },
     201,

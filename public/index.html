@@ -42,6 +42,12 @@
         <label for="campo-reserva-hornada">Hornada: el id de la hornada que vas a reservar.</label>
         <input id="campo-reserva-hornada" name="hornada_id" type="text" autocomplete="off" placeholder="Pegá el id de la tarjeta de tu sector">
 
+        <label for="campo-reserva-modalidad">Modalidad: cómo te llevamos el pan.</label>
+        <select id="campo-reserva-modalidad" name="modalidad"></select>
+
+        <label id="etiqueta-reserva-direccion" for="campo-reserva-direccion" style="display:none">Dirección: dónde te entregamos el pan.</label>
+        <input id="campo-reserva-direccion" name="direccion" type="text" style="display:none" autocomplete="street-address" placeholder="Calle, número, depto...">
+
         <label for="campo-reserva-unidades">Unidades: cuántas reservás.</label>
         <input id="campo-reserva-unidades" name="unidades" type="number" min="1" step="1" value="1">
 

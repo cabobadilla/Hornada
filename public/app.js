@@ -229,7 +229,30 @@ async function reservar() {
   const mensajeTotal = document.getElementById('mensaje-total-reserva');
   const confirmada = document.getElementById('reserva-confirmada');
   const campoHornada = form.hornada_id;
+  const selectorModalidad = form.modalidad;
+  const campoDireccion = form.direccion;
+  const etiquetaDireccion = document.getElementById('etiqueta-reserva-direccion');
+  let modalidadesOfrecidas = [];
   let precio = null;
+
+  const pintaDireccion = () => {
+    const visible = selectorModalidad.value === 'despacho' && modalidadesOfrecidas.includes('despacho');
+    campoDireccion.style.display = visible ? '' : 'none';
+    etiquetaDireccion.style.display = visible ? '' : 'none';
+  };
+
+  const pintaModalidades = (ofrecidas) => {
+    selectorModalidad.textContent = '';
+    modalidadesOfrecidas = Array.isArray(ofrecidas) ? ofrecidas.filter(Boolean) : [];
+    for (const m of modalidadesOfrecidas) {
+      const opcion = document.createElement('option');
+      opcion.value = m;
+      opcion.textContent = m === 'retiro' ? 'Retiro en la referencia' : 'Despacho en el barrio';
+      selectorModalidad.appendChild(opcion);
+    }
+    selectorModalidad.value = modalidadesOfrecidas[0] ?? '';
+    pintaDireccion();
+  };
 
   const pintaTotal = () => {
     const unidades = Number(form.unidades.value);
@@ -250,12 +273,19 @@ async function reservar() {
       if (!res.ok) return;
       const body = await res.json();
       precio = body?.hornada?.precio ?? null;
+      pintaModalidades(body?.hornada?.modalidades);
       pintaTotal();
     } catch {}
   }
 
   actualizarPrecioReserva = mirarPrecio;
   campoHornada.addEventListener('change', mirarPrecio);
+  // los tests (y los usuarios) pueden lanzar el change sobre el form mismo:
+  // también lo escuchamos en bubbling para poblar modalidad y precio.
+  form.addEventListener('change', (ev) => {
+    if (ev.target === campoHornada || ev.target === form) mirarPrecio();
+  });
+  selectorModalidad.addEventListener('change', pintaDireccion);
   form.unidades.addEventListener('input', pintaTotal);
 
   form.addEventListener('submit', async (ev) => {
@@ -270,12 +300,16 @@ async function reservar() {
       return;
     }
 
+    const modalidad = selectorModalidad.value || 'retiro';
     const datos = {
       nombre: form.nombre.value.trim(),
       contacto: form.contacto.value.trim(),
       unidades: form.unidades.value === '' ? undefined : Number(form.unidades.value),
-      modalidad: 'retiro',
+      modalidad,
     };
+    if (modalidad === 'despacho' && campoDireccion.style.display !== 'none') {
+      datos.direccion = campoDireccion.value.trim();
+    }
 
     try {
       const res = await fetch(`/api/hornadas/${encodeURIComponent(id)}/reservas`, {
@@ -293,6 +327,7 @@ async function reservar() {
         document.getElementById('reserva-unidades-confirmadas').textContent = body.reserva.unidades;
         mensaje.textContent = '';
         form.reset();
+        pintaDireccion();
         mensajeTotal.textContent = '';
       } else if (body.error === 'falta_nombre') {
         mensaje.textContent = 'Te falta tu nombre.';
@@ -309,6 +344,9 @@ async function reservar() {
         mensaje.textContent = 'Esa hornada ya está cerrada: se agotó o pasó la hora de retiro.';
       } else if (body.error === 'modalidad_no_ofrecida') {
         mensaje.textContent = 'Esa hornada no ofrece la modalidad elegida.';
+      } else if (body.error === 'falta_direccion') {
+        mensaje.textContent = 'El despacho necesita tu dirección: dónde se entrega el pan.';
+        campoDireccion.focus();
       } else if (body.error === 'no_existe') {
         mensaje.textContent = 'Ese id de hornada no existe: revisá la tarjeta de tu sector.';
         campoHornada.focus();
