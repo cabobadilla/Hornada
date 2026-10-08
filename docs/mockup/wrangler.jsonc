@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hornada-mockup",
+  "compatibility_date": "2026-10-08",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  }
+}

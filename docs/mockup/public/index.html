@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hornada · mockup congelado (ciclo 1)</title>
+<style>
+  :root{
+    --masa:#FBF3E6;
+    --corteza:#8A4B23;
+    --corteza-osc:#5C2F14;
+    --miga:#FFFDF8;
+    --miel:#E2A03F;
+    --salvia:#4F6B4A;
+    --tinta:#2B211A;
+    --gris:#6B5E52;
+    --linea:#E8DBC8;
+    --aviso-bg:#FBF6EC;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:40px 24px 64px;
+    background:linear-gradient(180deg,#F6EADA 0%,#EFE0CB 100%);
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    color:var(--tinta);
+  }
+  header{max-width:1160px;margin:0 auto 32px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .brand svg{display:block}
+  .brand h1{font-size:26px;margin:0;letter-spacing:-.02em}
+  .brand span{color:var(--gris);font-size:13px}
+  header p{margin:10px 0 0;color:var(--gris);font-size:14px;max-width:72ch}
+  .frozen{
+    display:inline-block;margin-top:14px;padding:5px 10px;border-radius:999px;
+    background:var(--corteza);color:#fff;font-size:11px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+  .flow{
+    display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:stretch;
+    max-width:1240px;margin:0 auto;
+  }
+  .frame{width:330px;flex:0 0 auto;display:flex;flex-direction:column}
+  .frame > .label{
+    font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--corteza-osc);margin:0 0 8px 4px;
+  }
+  .phone{
+    background:var(--masa);border:1px solid var(--linea);border-radius:26px;
+    padding:14px;box-shadow:0 10px 26px rgba(92,47,20,.13);
+    height:100%;display:flex;flex-direction:column;
+  }
+  .status{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;color:var(--gris);padding:0 4px 10px;
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:0 2px 12px;
+  }
+  .topbar h2{font-size:17px;margin:0;letter-spacing:-.01em}
+  .sector{
+    font-size:11px;color:var(--corteza-osc);background:#F3E3CE;border-radius:999px;
+    padding:4px 9px;font-weight:700;white-space:nowrap;
+  }
+
+  /* ---- tarjeta de hornada (cliente) ---- */
+  .card{
+    background:var(--miga);border:1px solid var(--linea);border-radius:18px;
+    padding:12px;margin-bottom:11px;position:relative;
+    display:flex;flex-direction:column;
+  }
+  .card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .card__quien{display:flex;align-items:center;gap:9px;min-width:0}
+  .avatar{
+    width:38px;height:38px;border-radius:50%;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;color:#fff;background:var(--corteza);
+  }
+  .avatar.a2{background:var(--salvia)}
+  .avatar.a3{background:var(--miel);color:var(--corteza-osc)}
+  .quien__nombre{font-weight:700;font-size:14px;line-height:1.2}
+  .quien__meta{font-size:12px;color:var(--gris);margin-top:3px}
+  .quien__meta b{color:var(--salvia)}
+  .cupo{
+    align-self:flex-start;background:#E8F0E4;color:var(--salvia);
+    border:1px solid #CBDFC3;border-radius:999px;padding:3px 8px;
+    font-size:11px;font-weight:800;white-space:nowrap;
+  }
+  .cupo.poco{background:#FBEDD7;color:#8A5A11;border-color:#EFD3A1}
+  .card__pan{font-size:13px;color:var(--corteza-osc);font-weight:700;margin-top:10px}
+  .card__cuando{font-size:12px;color:var(--gris);margin-top:3px}
+  .card__pie{
+    display:flex;flex-direction:column;gap:9px;
+    margin-top:12px;padding-top:11px;border-top:1px dashed var(--linea);
+  }
+  .precio{display:flex;align-items:baseline;gap:5px;min-height:22px}
+  .precio b{font-size:15px;font-weight:800}
+  .precio small{font-size:11px;color:var(--gris);font-weight:600}
+  .cta{
+    display:block;width:100%;border:none;border-radius:11px;
+    min-height:44px;padding:11px 14px;
+    background:var(--corteza);color:#fff;font-size:13px;font-weight:700;
+    font-family:inherit;
+  }
+  .cta.agotado{background:#EFE7DC;color:#8A7B6C}
+
+  /* ---- formularios ---- */
+  .campo{margin-bottom:12px}
+  .campo label{display:block;font-size:11px;font-weight:700;color:var(--gris);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .input{
+    width:100%;background:#fff;border:1px solid var(--linea);border-radius:11px;
+    padding:10px 12px;font-size:14px;color:var(--tinta);
+  }
+  .stepper{display:flex;align-items:center;gap:10px}
+  .stepper button{
+    width:44px;height:44px;border-radius:50%;border:1.5px solid #DCC7AE;background:#fff;
+    color:var(--corteza);font-size:18px;font-weight:800;line-height:1;font-family:inherit;
+  }
+  .stepper .unidades{font-size:22px;font-weight:800;min-width:34px;text-align:center}
+  .total{
+    display:flex;justify-content:space-between;align-items:center;
+    background:#F6EEDF;border-radius:12px;padding:11px 13px;margin:4px 0 12px;
+  }
+  .total span{font-size:12px;color:var(--corteza-osc);font-weight:700}
+  .total b{font-size:19px}
+  .aviso{
+    font-size:12px;color:var(--gris);line-height:1.45;background:var(--aviso-bg);
+    border-left:3px solid var(--miel);border-radius:0 8px 8px 0;padding:9px 11px;
+    margin-top:10px;
+  }
+
+  /* ---- estado del pedido ---- */
+  .estado{
+    background:var(--miga);border:1px solid var(--linea);border-radius:16px;
+    padding:13px;margin-bottom:11px;
+  }
+  .estado__fila{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+  .estado__fila span{color:var(--gris)}
+  .estado__fila b{font-weight:700}
+  .pin{
+    display:inline-flex;align-items:center;gap:6px;background:#E8F0E4;color:var(--salvia);
+    border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;
+  }
+  .prog{height:7px;border-radius:99px;background:#EFE7DC;overflow:hidden;margin-top:7px}
+  .prog i{display:block;height:100%;background:var(--miel);width:40%}
+
+  /* ---- pedidos (cocinero) ---- */
+  .pedido{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    background:var(--miga);border:1px solid var(--linea);border-radius:14px;
+    padding:11px 12px;margin-bottom:9px;
+  }
+  .pedido__n{font-size:13px;font-weight:700}
+  .pedido__d{font-size:12px;color:var(--gris);margin-top:3px}
+  .chico{border-radius:9px;min-height:44px;padding:0 12px;font-size:12px;font-weight:700;border:none;font-family:inherit}
+  .chico.si{background:var(--salvia);color:#fff}
+  .chico.no{background:#fff;color:var(--corteza);border:1.5px solid #DCC7AE}
+  .pie{
+    max-width:900px;margin:44px auto 0;color:var(--gris);font-size:13px;text-align:center;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+      <path d="M4 24c0-7 6-13 13-13s13 6 13 13z" fill="#8A4B23"/>
+      <path d="M9 20c1.5-4 4.5-6 8-6s6.5 2 8 6z" fill="#E2A03F" opacity=".55"/>
+      <rect x="2" y="24" width="30" height="5" rx="2.5" fill="#5C2F14"/>
+    </svg>
+    <div>
+      <h1>Hornada</h1>
+      <span>el pan de tu barrio, a la vuelta de tu casa</span>
+    </div>
+  </div>
+  <p>Mockup congelado del ciclo 1 — registro de cocineros y pedido de clientes. Sin pago,
+  sin delivery. Cuatro pantallas: cliente descubre y pide; el cocinero publica su tanda y
+  ve quién la retira.</p>
+  <span class="frozen">Ciclo 1 · congelado · 2026-10-08</span>
+</header>
+
+<div class="flow">
+
+  <!-- ============ 1. CLIENTE · DESCUBRIR ============ -->
+  <div class="frame">
+    <p class="label">1 · Cliente · hornadas de mi sector</p>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>Los Aromos</span></div>
+      <div class="topbar">
+        <h2>Hornadas de hoy</h2>
+        <span class="sector">Los Aromos</span>
+      </div>
+
+      <div class="card" id="card-1">
+        <div class="card__head">
+          <div class="card__quien">
+            <div class="avatar">MR</div>
+            <div>
+              <div class="quien__nombre">Marta Riquelme</div>
+              <div class="quien__meta">Los Aromos · <b>9 entregadas</b> · ★ 4,8</div>
+            </div>
+          </div>
+          <span class="cupo">quedan 6</span>
+        </div>
+        <div class="card__pan">Pan amasado · marraqueta</div>
+        <div class="card__cuando">Hoy 18:30 – 20:00 · retiro en portón azul, frente a la&nbsp;plaza</div>
+        <div class="card__pie">
+          <div class="precio"><b>$3.500</b> <small>la docena</small></div>
+          <button class="cta">Reservar · pagas al retirar</button>
+        </div>
+      </div>
+
+      <div class="card" id="card-2">
+        <div class="card__head">
+          <div class="card__quien">
+            <div class="avatar a2">JP</div>
+            <div>
+              <div class="quien__nombre">Jorge Paredes</div>
+              <div class="quien__meta">Los Aromos · <b>3 entregadas</b> · ★ 4,5</div>
+            </div>
+          </div>
+          <span class="cupo poco">queda 1</span>
+        </div>
+        <div class="card__pan">Pan de campo · masa madre</div>
+        <div class="card__cuando">Hoy 19:00 – 21:00 · retiro a 3 cuadras&nbsp;·&nbsp;pasaje Los&nbsp;Nogales&nbsp;12</div>
+        <div class="card__pie">
+          <div class="precio"><b>$2.800</b> <small>la unidad grande</small></div>
+          <button class="cta">Reservar · pagas al retirar</button>
+        </div>
+      </div>
+
+      <div class="card" id="card-3">
+        <div class="card__head">
+          <div class="card__quien">
+            <div class="avatar a3">LS</div>
+            <div>
+              <div class="quien__nombre">Lucía Soto</div>
+              <div class="quien__meta">Los Aromos · <b>primera hornada</b></div>
+            </div>
+          </div>
+          <span class="cupo">quedan 12</span>
+        </div>
+        <div class="card__pan">Hallullas</div>
+        <div class="card__cuando">Mañana 08:00 – 09:30 · retiro a 2 cuadras&nbsp;·&nbsp;calle El&nbsp;Horno&nbsp;4</div>
+        <div class="card__pie">
+          <div class="precio"><b>$1.200</b> <small>las 6 unidades</small></div>
+          <button class="cta">Reservar · pagas al retirar</button>
+        </div>
+      </div>
+
+      <div class="aviso">Hornada conecta vecinos: la app no prepara ni reparte el pan.
+      Cada cocinero es responsable de sus alimentos.</div>
+    </div>
+  </div>
+
+  <!-- ============ 2. CLIENTE · PEDIR ============ -->
+  <div class="frame">
+    <p class="label">2 · Cliente · reservar la hornada</p>
+    <div class="phone">
+      <div class="status"><span>9:43</span><span>Los Aromos</span></div>
+      <div class="topbar">
+        <h2>Pan amasado</h2>
+        <span class="sector">Marta R.</span>
+      </div>
+
+      <div class="card" id="card-detalle">
+        <div class="card__head">
+          <div class="card__quien">
+            <div class="avatar">MR</div>
+            <div>
+              <div class="quien__nombre">Marta Riquelme</div>
+              <div class="quien__meta">Los Aromos · <b>9 entregadas</b> · ★ 4,8</div>
+            </div>
+          </div>
+          <span class="cupo">quedan 6</span>
+        </div>
+        <div class="card__pan">Hoy 18:30 – 20:00</div>
+        <div class="card__cuando">Retiro: portón azul frente a la plaza (se confirma al reservar)</div>
+      </div>
+
+      <div class="campo">
+        <label for="unidades">¿Cuántas docenas?</label>
+        <div class="stepper">
+          <button type="button" aria-label="menos">–</button>
+          <span class="unidades" id="unidades">2</span>
+          <button type="button" aria-label="más">+</button>
+        </div>
+      </div>
+
+      <div class="total">
+        <span>Total a pagar al retirar</span>
+        <b id="total">$7.000</b>
+      </div>
+
+      <div class="campo">
+        <label for="nombre">Tu nombre</label>
+        <input class="input" id="nombre" value="Christian B.">
+      </div>
+      <div class="campo">
+        <label for="contacto">WhatsApp para avisarte</label>
+        <input class="input" id="contacto" value="+56 9 1234 5678">
+      </div>
+
+      <button class="cta">Reservar 2 docenas</button>
+      <div class="aviso">No se paga en la app: el pago lo acuerdas al retirar el pan, con
+      la cocinera.</div>
+    </div>
+  </div>
+
+  <!-- ============ 3. COCINERO · PUBLICAR ============ -->
+  <div class="frame">
+    <p class="label">3 · Cocinero · publicar mi hornada</p>
+    <div class="phone">
+      <div class="status"><span>7:10</span><span>Los Aromos</span></div>
+      <div class="topbar">
+        <h2>Mi hornada de hoy</h2>
+        <span class="sector">Marta R.</span>
+      </div>
+
+      <div class="campo">
+        <label for="que">Qué horneo</label>
+        <input class="input" id="que" value="Pan amasado">
+      </div>
+      <div class="campo">
+        <label for="fecha">Cuándo</label>
+        <input class="input" id="fecha" value="Hoy · 18:30 – 20:00">
+      </div>
+      <div class="campo">
+        <label for="cupo">Cuántas docenas horneo</label>
+        <input class="input" id="cupo" value="10">
+      </div>
+      <div class="campo">
+        <label for="precio">Precio por docena</label>
+        <input class="input" id="precio" value="$3.500">
+      </div>
+      <div class="campo">
+        <label for="punto">Cómo llegan (referencia de retiro)</label>
+        <input class="input" id="punto" value="Portón azul frente a la plaza">
+      </div>
+
+      <button class="cta">Publicar hornada</button>
+      <div class="aviso">Solo puedes tener una hornada abierta a la vez: no prometas más
+      pan del que tu horno puede hacer.</div>
+    </div>
+  </div>
+
+  <!-- ============ 4. COCINERO · PEDIDOS ============ -->
+  <div class="frame">
+    <p class="label">4 · Cocinero · quién retira mi pan</p>
+    <div class="phone">
+      <div class="status"><span>20:05</span><span>Los Aromos</span></div>
+      <div class="topbar">
+        <h2>Pan amasado · hoy</h2>
+        <span class="sector">Marta R.</span>
+      </div>
+
+      <div class="estado">
+        <div class="estado__fila"><span>Reservado</span><b>4 de 10 docenas</b></div>
+        <div class="prog"><i></i></div>
+        <div class="estado__fila" style="margin-top:11px">
+          <span>Ventana de retiro</span><b>18:30 – 20:00</b>
+        </div>
+        <span class="pin">Hornada abierta</span>
+      </div>
+
+      <div class="pedido">
+        <div>
+          <div class="pedido__n">Christian B. · 2 docenas</div>
+          <div class="pedido__d">+56 9 1234 5678 · reservó 9:43</div>
+        </div>
+        <button class="chico si">Entregado</button>
+      </div>
+      <div class="pedido">
+        <div>
+          <div class="pedido__n">Ana Fernández · 1 docena</div>
+          <div class="pedido__d">+56 9 8765 4321 · reservó 10:02</div>
+        </div>
+        <button class="chico no">Aún no</button>
+      </div>
+      <div class="pedido">
+        <div>
+          <div class="pedido__n">Pedro Vidal · 1 docena</div>
+          <div class="pedido__d">+56 9 5555 1111 · reservó 10:20</div>
+        </div>
+        <button class="chico no">Aún no</button>
+      </div>
+
+      <div class="aviso">Cuando se agotan las 10 docenas, la hornada se cierra sola.</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="pie">Hornada · mockup congelado del ciclo 1 · 4 pantallas del flujo
+(descubrir → reservar → publicar → entregar) · sin datos reales</p>
+</body>
+</html>
