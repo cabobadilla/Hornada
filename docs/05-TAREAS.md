@@ -100,7 +100,7 @@ construir da un rojo que no significa nada.
 - **Casos que debe cubrir:** `C-22`, `C-23`, `C-24`
 - **Entrada:** T-5 (reserva funcionando) y las `modalidades` de la hornada
 - **Salida:** selector de modalidad en la pantalla de reserva, validación y campo condicional de dirección
-- **Test primero:** modalidad no ofrecida → 400 `modalidad_no_ofrecida`; despacho sin dirección → 400 `falta_direccion`; retiro → 201 con `donde === referencia_retiro`; despacho → 201 y la dirección **quedó guardada** en la reserva (se relee por su `codigo`). Que el cocinero **vea** esa dirección es de T-7 (el panel): se verifica ahí, no acá.
+- **Test primero:** modalidad no ofrecida → 400 `modalidad_no_ofrecida`; despacho sin dirección → 400 `falta_direccion`; retiro → 201 con `donde === referencia_retiro`; despacho → 201 y la dirección **quedó guardada** en la reserva (se relee de **D1**, no por `GET /api/reservas/:codigo`: ese endpoint es de T-8). Que el cocinero **vea** esa dirección es de T-7 (el panel): se verifica ahí, no acá.
 - **Criterio de terminado:** los 3 casos en verde; el formulario **no permite elegir** una modalidad que la hornada no ofrece.
 
 - [ ] Test escrito y fallando (RED) — evidencia:
@@ -114,7 +114,7 @@ construir da un rojo que no significa nada.
 - **Casos que debe cubrir:** `C-18`, `C-19`
 - **Entrada:** reservas de T-5/T-6 y el `token` del cocinero
 - **Salida:** `GET /api/cocineros/mi-panel?token=…`, `POST /api/reservas/:id/entregado` y la pantalla del panel
-- **Test primero:** el panel lista las reservas de sus hornadas y **con el token de otro devuelve 403**; marcar entregado persiste (se relee el panel y sigue `entregada`).
+- **Test primero:** el panel lista las reservas de sus hornadas (incluida la **dirección** de un despacho — C-23, segunda mitad) y **con el token de otro devuelve 403**; marcar entregado persiste (se relee el panel y sigue `entregada`).
 - **Criterio de terminado:** los 2 casos en verde; ningún dato de otro cocinero aparece en la respuesta.
 
 - [ ] Test escrito y fallando (RED) — evidencia:

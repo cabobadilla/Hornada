@@ -366,8 +366,8 @@ credenciales de plataforma.
 | `C-20` | El cliente ve su reserva y solo la suya | HU-6 / C-20 | comportamiento | `GET /api/reservas/:codigo` trae estado y `donde`; un código ajeno no devuelve esa reserva |
 | `C-21` | Una hornada cerrada no acepta reservas | HU-7 / C-21 | comportamiento | 409 `hornada_cerrada` sobre una hornada agotada o con `hasta` pasado |
 | `C-22` | El cliente solo elige modalidades ofrecidas | HU-8 / C-22 | comportamiento | hornada que solo ofrece `retiro` + reserva con `modalidad: 'despacho'` → 400 `modalidad_no_ofrecida` |
-| `C-23` | Despacho exige dirección y la muestra al cocinero | HU-8 / C-23 | comportamiento | sin `direccion` → 400 `falta_direccion`; con ella, la reserva **guarda la dirección** (se relee por su `codigo`). La segunda mitad —que el cocinero la **vea**— se verifica en **T-7**, cuando exista el panel: es una superficie de T-7, no un observable de T-6 |
-| `C-24` | Retiro devuelve la referencia y no pide dirección | HU-8 / C-24 | comportamiento | reserva `retiro` → 201 con `donde === referencia_retiro` y sin exigir `direccion` |
+| `C-23` | Despacho exige dirección y la muestra al cocinero | HU-8 / C-23 | comportamiento | sin `direccion` → 400 `falta_direccion`; con ella, la reserva **guarda la dirección**, leída de **D1** (no por `GET /api/reservas/:codigo`: ese endpoint es de **T-8** y un test no puede depender de una superficie de otra tarea). La segunda mitad —que el cocinero la **vea**— se verifica en **T-7**, cuando exista el panel: es una superficie de T-7, no un observable de T-6 |
+| `C-24` | Retiro devuelve la referencia y no pide dirección | HU-8 / C-24 | comportamiento | reserva `retiro` → 201 con `donde === referencia_retiro` (leído de D1) y sin exigir `direccion` |
 | `C-25` | Se califica una sola vez y solo con el pan entregado | HU-9 / C-25 | comportamiento | reserva `reservada` → 409 `reserva_no_entregada`; entregada → 201; repetir → 409 `ya_calificada` |
 | `C-26` | El promedio y la cantidad de reseñas salen en la tarjeta | HU-9 / C-26 | comportamiento | con 2 reseñas (5 y 4), la hornada trae `cocinero.promedio = 4.5` y `resenas = 2` |
 | `C-27` | Con ≥5 reseñas y promedio < 3,0 el cocinero se suspende | HU-9 / C-27 | umbral | 5 reseñas de 1 estrella → sus hornadas **no** aparecen en el listado y no aceptan reservas (403 `cocinero_suspendido`) |
@@ -406,9 +406,15 @@ genera variantes visuales distintas, solo campos condicionales.
 |---|---|---|
 | `EX-404` de `tests/ciclo-1.test.mjs` (T-1, caso extra del Coder): "`GET /api/hornadas?sector=x` → 404 porque la ruta no existe" | **C-08** | El caso afirmaba la **ausencia** de una ruta que el diseño define dos tareas después. Un caso que afirma que algo *todavía no existe* es una mina: se vuelve falso por diseño, no por defecto. El Coder lo reportó como bloqueo (no podía tocarlo: sellado). **Se retira en el ciclo de tests de T-5**, en un commit propio de tests. |
 
-**Regla que sale de acá:** un caso extra **nunca** puede afirmar la ausencia de una
-funcionalidad declarada en la matriz del mismo ciclo. Si una ruta está en el diseño,
-que todavía no la implemente la tarea en curso no es un observable.
+**Reglas que salen de acá:**
+
+1. Un caso extra **nunca** puede afirmar la ausencia de una funcionalidad declarada en
+   la matriz del mismo ciclo. Que una ruta esté en el diseño y todavía no la implemente
+   la tarea en curso no es un observable.
+2. Un test de una tarea **no puede usar superficies de otra tarea**. Pasó dos veces en
+   este ciclo: C-23 necesitaba el panel (T-7) y C-23/C-24 usaban `GET /api/reservas/:codigo`
+   (T-8). Si el observable es un dato guardado, se lee de **D1**; si es una pantalla,
+   la mide la tarea que la construye.
 
 ### Clase de criterio
 
