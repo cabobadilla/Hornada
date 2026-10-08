@@ -23,7 +23,7 @@
   .kpi b{font-size:21px; font-weight:600}
   .kpi span{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em}
   .barra{height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-top:18px}
-  .barra i{display:block; height:100%; background:var(--accent); width:64%}
+  .barra i{display:block; height:100%; background:var(--accent); width:73%}
   h2{font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
      margin:44px 0 6px; font-weight:600}
   .h2sub{color:var(--muted); font-size:13px; margin:0 0 16px; max-width:70ch}
@@ -105,11 +105,11 @@
     <h1>Hornada</h1>
     <p class="sub">Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.</p>
     <div class="meta">
-      <div class="kpi"><b>64%</b><span>Tareas del ciclo</span></div>
-      <div class="kpi"><b>7/11</b><span>Completadas</span></div>
+      <div class="kpi"><b>73%</b><span>Tareas del ciclo</span></div>
+      <div class="kpi"><b>8/11</b><span>Completadas</span></div>
       <div class="kpi"><b>Ciclo 1</b><span>Ciclo activo</span></div>
       <div class="kpi"><b>Etapa 1 · registro de cocineros + pedido de clientes</b><span>Alcance</span></div>
-      <div class="kpi"><b>Implementación — 7 de 11 tareas; suite 46/46 · T-8 en curso</b><span>Fase actual</span></div>
+      <div class="kpi"><b>Implementación — 8 de 11 tareas; suite 49/49 tres veces · T-9 en curso</b><span>Fase actual</span></div>
     </div>
     <div class="barra"><i></i></div>
   </header>
@@ -183,13 +183,13 @@
       <span class="tk-id">T-7</span>
       <span class="tk-titulo">El panel del cocinero</span>
       <span class="tk-nota">C-18 · C-19 · C-23 (mitad del panel) + 2 extras · 46/46 · 2 mutaciones muerden (la de la fuga entre cocineros tumba 4 casos) · la corrida murió al final sin commitear y el trabajo lo commiteó Hermes tras verificarlo</span>
-    </li><li class="run">
-      <span class="tk-estado">◐</span>
+    </li><li class="ok">
+      <span class="tk-estado">✓</span>
       <span class="tk-id">T-8</span>
       <span class="tk-titulo">El cliente sigue su pedido</span>
-      <span class="tk-nota">C-20</span>
-    </li><li class="wait">
-      <span class="tk-estado">○</span>
+      <span class="tk-nota">C-20 (+C-20b, +DOM) · 49/49 canónico 3/3 · 2 mutaciones muerden (la que ignora el código deja 0/3 y filtra reservas ajenas) · corrida limpia, commiteada por el Coder</span>
+    </li><li class="run">
+      <span class="tk-estado">◐</span>
       <span class="tk-id">T-9</span>
       <span class="tk-titulo">Reseñas y suspensión</span>
       <span class="tk-nota">C-25 · C-26 · C-27 · C-28</span>
@@ -274,13 +274,13 @@
       </div>
   </div>
 
-  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
+  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
 
   
 
   <footer>
-    <p><strong>Siguiente:</strong> T-8 (el cliente sigue su pedido) → T-9 (reseñas y suspensión) → T-4 (forma) → T-10.</p>
-    <p>Actualizado 08-10-2026, 4:05 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
+    <p><strong>Siguiente:</strong> T-9 (reseñas y suspensión) → T-4 (forma, C-10…C-13) → T-10 (cierre y smoke contra la URL publicada).</p>
+    <p>Actualizado 08-10-2026, 5:00 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
   </footer>
 
 </div>

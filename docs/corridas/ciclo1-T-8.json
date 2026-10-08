@@ -1,0 +1,24 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-8",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "8b0b4fb test(T-8) en ROJO (3 casos)",
+    "15d76ee implement(T-8): GET /api/reservas/:codigo + pantalla #mi-reserva"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "proceso": "Correcto y limpio: tests en su commit (no tocado después), implementación aparte, árbol sin cambios pendientes, sin bloqueos.",
+  "verificacion_de_hermes": {
+    "sello": "seal-from-commit 8b0b4fb + verify → INTACTOS",
+    "verde_canonico": "node --test tests/ (sin flags) 3/3 corridas: 49 / 49 / 0",
+    "mutacion": [
+      "ignorar el código y devolver cualquier reserva → C-20 y C-20b rojos, 0/3 pasan (fuga de datos ajenos)",
+      "donde = referencia siempre (ignorar el despacho) → C-20 rojo"
+    ],
+    "riesgo_residual": "El Coder reportó una corrida intermedia que murió por 'turno roto' del lock tras matar un wrangler a mano. No se reprodujo en mis 3 corridas canónicas; queda como fragilidad conocida del arnés de tests (si aparece un rojo raro, primero mirar el lock, no el entregable)."
+  }
+}

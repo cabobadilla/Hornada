@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T19:05:00Z",
+  "actualizado": "2026-10-08T20:00:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — 7 de 11 tareas; suite 46/46 · T-8 en curso",
-  "siguiente": "T-8 (el cliente sigue su pedido) → T-9 (reseñas y suspensión) → T-4 (forma) → T-10.",
+  "fase_actual": "Implementación — 8 de 11 tareas; suite 49/49 tres veces · T-9 en curso",
+  "siguiente": "T-9 (reseñas y suspensión) → T-4 (forma, C-10…C-13) → T-10 (cierre y smoke contra la URL publicada).",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 7,
+      "evaluado": 8,
       "rechazo": 1
     },
     "G4": {
@@ -131,13 +131,13 @@
     {
       "id": "T-8",
       "titulo": "El cliente sigue su pedido",
-      "estado": "en-curso",
-      "nota": "C-20"
+      "estado": "listo",
+      "nota": "C-20 (+C-20b, +DOM) · 49/49 canónico 3/3 · 2 mutaciones muerden (la que ignora el código deja 0/3 y filtra reservas ajenas) · corrida limpia, commiteada por el Coder"
     },
     {
       "id": "T-9",
       "titulo": "Reseñas y suspensión",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-25 · C-26 · C-27 · C-28"
     },
     {
@@ -250,6 +250,10 @@
     {
       "id": "H-7",
       "nota": "Tocar un test, aunque sea una línea, va en un commit de tests propio: es lo que permite al sello distinguir contrato de implementación."
+    },
+    {
+      "id": "H-8",
+      "nota": "Fragilidad conocida del arnés de tests: si una corrida muere por 'turno roto' del lock (tras matar un wrangler a mano), el rojo es del arnés, no del entregable. Mirar el lock antes de acusar al código."
     }
   ],
   "diferido": [
