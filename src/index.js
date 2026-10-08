@@ -358,7 +358,7 @@ async function reservar(request, env, hornadaId) {
     hornada.promedio_cocinero !== null &&
     Number(hornada.promedio_cocinero) < UMBRAL_PROMEDIO
   ) {
-    return json({ error: 'cocinero_suspendido', motivo: MOTIVO_SUSPENSION }, 409);
+    return json({ error: 'cocinero_suspendido', motivo: MOTIVO_SUSPENSION }, 403);
   }
 
   const ahora = new Date().toISOString();
