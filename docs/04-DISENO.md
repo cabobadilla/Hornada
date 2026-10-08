@@ -186,6 +186,25 @@ UPDATE hornadas SET disponibles = disponibles - ?2, estado = CASE WHEN disponibl
 Si `meta.changes !== 1` → `409 sin_cupo`. Es **una sola sentencia atómica**: no hay
 ventana entre leer y escribir, y por eso C-15 y C-16 se sostienen bajo concurrencia.
 
+### Contrato de la pantalla (rutas e ids)  ← agregado en T-3
+
+> **Por qué existe (T-3).** El diseño fijaba los contratos de la **API** y dejaba la
+> interfaz del navegador sin especificar. El Coder escribió un test contra `#sector`,
+> después implementó `?sector=` y terminó **editando el test para que coincidiera**.
+> El test no estaba mal: **faltaba el contrato**. Lo que no está especificado se
+> negocia contra la implementación, y ahí el test deja de ser independiente.
+
+| Qué | Contrato |
+|---|---|
+| Sector elegido | `/?sector=<texto>` — **query string**, no hash. La app lo lee al cargar y lo escribe al elegir |
+| Listado | contenedor `#lista-hornadas` con tarjetas `[id^="card-hornada"]` (una por hornada) |
+| Estado vacío | `#estado-vacio`, con un enlace a registrarse como cocinero |
+| Registro de cocinero | `#form-cocinero` (C-01) |
+| Publicar hornada | `#form-hornada` (C-04) |
+| Estilo | una sola hoja `public/styles.css`; sin fuentes ni CDN externos |
+
+Todo id que un caso de la matriz nombre es **contrato**, no un detalle de implementación.
+
 ## Stack y dependencias
 
 | Elección | Versión | Justificación |
@@ -380,6 +399,16 @@ genera variantes visuales distintas, solo campos condicionales.
 - **OC-3 · La suspensión es del listado, no del historial** — con 5 reseñas de 1
   estrella el cocinero desaparece del listado, y **su panel sigue mostrando** las
   reservas pendientes (incluida la dirección de un despacho).
+
+### Casos superados
+
+| Caso | Superado por | Por qué |
+|---|---|---|
+| `EX-404` de `tests/ciclo-1.test.mjs` (T-1, caso extra del Coder): "`GET /api/hornadas?sector=x` → 404 porque la ruta no existe" | **C-08** | El caso afirmaba la **ausencia** de una ruta que el diseño define dos tareas después. Un caso que afirma que algo *todavía no existe* es una mina: se vuelve falso por diseño, no por defecto. El Coder lo reportó como bloqueo (no podía tocarlo: sellado). **Se retira en el ciclo de tests de T-5**, en un commit propio de tests. |
+
+**Regla que sale de acá:** un caso extra **nunca** puede afirmar la ausencia de una
+funcionalidad declarada en la matriz del mismo ciclo. Si una ruta está en el diseño,
+que todavía no la implemente la tarea en curso no es un observable.
 
 ### Clase de criterio
 
