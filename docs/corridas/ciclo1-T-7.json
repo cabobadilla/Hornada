@@ -1,0 +1,29 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-7",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa_con_corrida_truncada",
+  "commits": [
+    "518b42a test(T-7) en ROJO",
+    "532b1e8 implement(T-7) — commit de Hermes"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "incidencia_de_la_corrida": {
+    "que": "La corrida murió en el último paso: un tool-call con JSON inválido y un permiso auto-rechazado sobre tests/evidence/GREEN-ciclo-1.txt. El run salió con EXIT=0 pero el trabajo quedó SIN COMMITEAR (258 líneas en src/index.js, public/app.js, public/index.html).",
+    "que_hice": "Corrí la suite en el árbol: 46/46. Revisé el diff (autorización por token, pertenencia por cocinero, persistencia real del entregado, dirección solo en despacho) y lo commiteé yo, declarándolo en el mensaje del commit.",
+    "leccion": "EXIT=0 no es 'trabajo entregado': el estado del árbol es la señal. La verificación mira el repo, nunca el código de salida.",
+    "otro_detalle": "Su informe final quedó con texto corrupto en la evidencia ('decados', 'falli-none') y una ruta con typo ('/Users/chrianbobadilla'), señales del mismo desorden final. Los tests, en cambio, quedaron limpios y en su commit propio."
+  },
+  "verificacion_de_hermes": {
+    "sello": "seal-from-commit 518b42a + verify → INTACTOS (el commit de implementación no tocó ni un .mjs)",
+    "verde_canonico": "node --test tests/ (sin flags) → 46/46",
+    "mutacion": [
+      "el panel sin filtrar por cocinero → C-18 rojo (4 fallos: fuga de datos entre cocineros)",
+      "marcar entregado sin persistir → C-19 rojo"
+    ],
+    "review": "review.sh: consistente, sin marcadores de RED"
+  }
+}

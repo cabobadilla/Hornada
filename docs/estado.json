@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T18:10:00Z",
+  "actualizado": "2026-10-08T19:05:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — 6 de 10 tareas; suite 39/39 tres veces · T-7 en curso",
-  "siguiente": "T-7 (panel del cocinero) → T-8 → T-9 → T-4 (forma) → T-10 (suite completa).",
+  "fase_actual": "Implementación — 7 de 11 tareas; suite 46/46 · T-8 en curso",
+  "siguiente": "T-8 (el cliente sigue su pedido) → T-9 (reseñas y suspensión) → T-4 (forma) → T-10.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 6,
+      "evaluado": 7,
       "rechazo": 1
     },
     "G4": {
@@ -125,13 +125,13 @@
     {
       "id": "T-7",
       "titulo": "El panel del cocinero",
-      "estado": "en-curso",
-      "nota": "C-18 · C-19"
+      "estado": "listo",
+      "nota": "C-18 · C-19 · C-23 (mitad del panel) + 2 extras · 46/46 · 2 mutaciones muerden (la de la fuga entre cocineros tumba 4 casos) · la corrida murió al final sin commitear y el trabajo lo commiteó Hermes tras verificarlo"
     },
     {
       "id": "T-8",
       "titulo": "El cliente sigue su pedido",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-20"
     },
     {
