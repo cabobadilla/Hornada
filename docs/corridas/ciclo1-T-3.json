@@ -1,0 +1,33 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-3",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa_con_desviacion",
+  "commits": [
+    "65ea006 tests(T-3) en RED",
+    "744de40 GET /api/hornadas + arranque serializado en t3",
+    "b5ff2a8 pantalla del listado",
+    "dd21559 evidencia"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "desviacion": {
+    "que": "El Coder MODIFICÓ su archivo de tests DESPUÉS del commit de tests, dentro de un commit de implementación (744de40): +145/-36 en tests/t3-listado.test.mjs. El sello lo detectó: 'Tests MODIFICADOS — corrida INVÁLIDA'.",
+    "que_cambio": "Serialización del arranque del dev server, siembra por D1 con WHERE NOT EXISTS / --file, y — lo que importa — el observable de C-29 pasó de '/#sector' a '/?sector=' y el selector a [id^=card-hornada], para coincidir con la implementación.",
+    "mi_juicio": "El cambio del observable NO es un debilitamiento de aserción: es la falta de un contrato. El diseño no especificaba la interfaz del navegador (ruta del sector, ids), así que el test se negoció contra la implementación. Corregido del lado del diseño: 04-DISENO ahora tiene 'Contrato de la pantalla (rutas e ids)'.",
+    "por_que_no_se_repitio": "Re-despachar habría reescrito tests que ya quedaron probados independientemente: el RED se reprodujo con los tests FINALES contra la implementación previa a T-3 (fe9eca9) → 9/9 fallan POR ASERCIÓN, y 2 mutaciones (quitar el filtro de cupo → C-09 rojo; invertir el orden → C-08 rojo) confirman que los tests muerden.",
+    "que_queda_para_atras": "El sello de T-3 nace en e94a355 (commit ancla sin cambios de test), no en el commit de tests. La protección vuelve a estar en pie desde ahí."
+  },
+  "verificacion_de_hermes": {
+    "sello": "detectó la modificación (❌ corrida INVÁLIDA) → revisado el diff → re-anclado en e94a355 → verify INTACTOS",
+    "red_reproducido_de_los_tests_finales": "git checkout fe9eca9 -- src public + node --test tests/t3-listado.test.mjs → 9/9 fallan por AssertionError ('esperaba 200, llegó 404')",
+    "verde": "25/26 en la suite completa; el único rojo es EX-404, caso de T-1 que afirma la NO existencia de una ruta que T-3 implementa por diseño → marcado SUPERADO en 04-DISENO, se retira en el ciclo de tests de T-5",
+    "mutacion": [
+      "quitar el filtro disponible>0 → C-09 rojo",
+      "ORDER BY desde DESC → C-08 rojo"
+    ],
+    "review": "review.sh: consistente, sin marcadores de RED"
+  }
+}
