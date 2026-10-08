@@ -139,7 +139,7 @@ test('C-25 · solo reserva entregada, una sola vez: 409 no_entregada → 201 →
   assert.equal(filas.length, 1, 'C-25 · una sola fila en resenas para esta reserva');
   assert.equal(filas[0].estrellas, 5, 'C-25 · la fila guardada es la PRIMERA (5 estrellas), no la repetida');
   assert.equal(filas[0].comentario, 'pan tibio y puntual', 'C-25 · la fila guarda el comentario de C-25');
-  assert.equal(d1(`SELECT COUNT(*) AS n FROM resenas WHERE cocinero_id = (SELECT id FROM hornadas WHERE id = '${hornada.id}')`).find((f) => f.n)?.n, 1,
+  assert.equal(d1(`SELECT COUNT(*) AS n FROM resenas WHERE cocinero_id = (SELECT cocinero_id FROM hornadas WHERE id = '${hornada.id}')`).find((f) => f.n)?.n, 1,
     'C-25 · la resena quedó asociada al cocinero de la hornada');
 });
 
