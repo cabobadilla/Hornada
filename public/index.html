@@ -35,6 +35,47 @@
 
       <p id="mensaje-cocinero" class="mensaje" role="status"></p>
     </section>
+
+    <section class="card" aria-labelledby="titulo-hornada">
+      <h2 id="titulo-hornada">Mi hornada.</h2>
+      <p>Publica lo que vas a hornear: qué pan, cuándo sale, cuántas unidades y a cuánto. Los vecinos reservan antes de que se enfríe.</p>
+
+      <form id="form-hornada">
+        <label for="campo-pan">Pan: qué estás horneando.</label>
+        <input id="campo-pan" name="pan" type="text" placeholder="Marraquetas de masa madre">
+
+        <label for="campo-desde">Desde: cuándo lo sacas del horno.</label>
+        <input id="campo-desde" name="desde" type="datetime-local">
+
+        <label for="campo-hasta">Hasta: hasta cuándo se puede retirar.</label>
+        <input id="campo-hasta" name="hasta" type="datetime-local">
+
+        <label for="campo-unidades">Unidades: cuántas salen en total.</label>
+        <input id="campo-unidades" name="unidades" type="number" min="1" step="1" placeholder="30">
+
+        <label for="campo-precio">Precio: pesos chilenos por unidad, entero.</label>
+        <input id="campo-precio" name="precio" type="number" min="1" step="1" placeholder="1500">
+
+        <label>Modalidades: cómo se entrega.</label>
+        <div class="opciones">
+          <span class="opcion">
+            <input id="campo-modalidades-retiro" name="modalidades" type="checkbox" value="retiro">
+            <label for="campo-modalidades-retiro" class="inline">Retiro en la referencia</label>
+          </span>
+          <span class="opcion">
+            <input id="campo-modalidades-despacho" name="modalidades" type="checkbox" value="despacho">
+            <label for="campo-modalidades-despacho" class="inline">Despacho en el barrio</label>
+          </span>
+        </div>
+
+        <label for="campo-referencia-hornada">Referencia de retiro: dónde y cuándo te buscan el pan.</label>
+        <input id="campo-referencia-hornada" name="referencia_retiro" type="text" placeholder="Portón gris Calle 1, s/f y s/b, 8:00 a 20:00">
+
+        <button type="submit">Publicar mi hornada</button>
+      </form>
+
+      <p id="mensaje-hornada" class="mensaje" role="status"></p>
+    </section>
   </main>
 
   <script src="/app.js"></script>

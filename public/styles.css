@@ -84,6 +84,36 @@ button:hover { filter: brightness(0.92); }
 
 .mensaje { min-height: 1.5em; font-weight: 500; }
 
+.opciones {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.opcion input[type=checkbox] {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--acento);
+}
+
+.opcion label.inline {
+  margin-bottom: 0;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.opcion label.inline::after { content: none; }
+
 @media (max-width: 430px) {
   body { padding: 18px 12px 40px; }
   .card { padding: 16px; }
