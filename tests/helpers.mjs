@@ -52,11 +52,19 @@ export function serverReady() {
 }
 
 export function stopServer() {
-  if (server) {
-    try {
-      process.kill(-server.pid);
-    } catch {}
+  for (const p of [server, chrome]) {
+    if (p) {
+      try {
+        process.kill(-p.pid);
+      } catch {
+        try {
+          p.kill();
+        } catch {}
+      }
+    }
   }
+  server = null;
+  chrome = null;
 }
 
 export function d1(sql) {
@@ -128,7 +136,7 @@ export async function withBrowser(url, fn) {
   assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo para leer el DOM real');
   if (!chrome) {
     cdpPort = await freePort();
-    constuserData = new globalThis.URL('../.tmp/chrome-profile', import.meta.url).pathname;
+    const userData = new globalThis.URL('../.tmp/chrome-profile', import.meta.url).pathname;
     chrome = spawn(
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       [
@@ -173,8 +181,10 @@ export async function withBrowser(url, fn) {
     });
   } finally {
     try {
-      cdp.send('Target.closeTarget', { targetId: created.id });
       ws.close();
+    } catch {}
+    try {
+      cdp.send('Target.closeTarget', { targetId: created.id });
     } catch {}
   }
 }
