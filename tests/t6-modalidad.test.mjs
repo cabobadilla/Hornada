@@ -65,11 +65,6 @@ async function reservar(hornadaId, cuerpo) {
   });
 }
 
-async function leerReserva(codigo) {
-  const { res, body } = await apiJson(`/api/reservas/${encodeURIComponent(codigo)}`);
-  return { res, body };
-}
-
 async function leerCupoApi(hornadaId) {
   const { res, body } = await apiJson(`/api/hornadas/${encodeURIComponent(hornadaId)}`);
   assert.equal(res.status, 200, `precondición · releer la hornada debía dar 200, llegó ${res.status}`);
@@ -144,11 +139,13 @@ test('C-22 · hornada solo retiro + reserva despacho da 400 modalidad_no_ofrecid
 // ============================================================
 // C-23 · comportamiento: despacho exige dirección. Sin `direccion`
 // → 400 `falta_direccion` (cupo intacto); con dirección → 201 y la
-// dirección exacta quedó guardada: se relee con
-// GET /api/reservas/:codigo. (Que el cocinero la VEA es de T-7.)
+// dirección exacta quedó guardada: se relee de D1 (el observable es
+// un dato guardado; `GET /api/reservas/:codigo` es superficie de T-8
+// y un test no puede depender de una superficie de otra tarea).
+// (Que el cocinero la VEA es de T-7.)
 // ============================================================
 
-test('C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y guardada exacta en GET /api/reservas/:codigo', async () => {
+test('C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y guardada exacta en D1', async () => {
   assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo');
   const c = await cocineroNuevo('c23');
   const h = await publicarHornada(c.token, {
@@ -216,29 +213,25 @@ test('C-23 · despacho sin direccion da 400 falta_direccion; con direccion 201 y
     `C-23 · con despacho, donde debe ser la dirección pedida, llegó ${JSON.stringify(reserva.donde)}`,
   );
 
-  // releer con GET /api/reservas/:codigo: la dirección guardada es exacta
-  const releida = await leerReserva(reserva.codigo);
-  assert.equal(
-    releida.res.status,
-    200,
-    `C-23 · GET /api/reservas/:codigo debía dar 200, llegó ${releida.res.status}: ${JSON.stringify(releida.body)}`,
+  // el dato guardado se lee de D1: JOIN con hornadas porque `donde` es
+  // derivado (modalidad despacho → direccion; retiro → referencia_retiro).
+  // No se usa GET /api/reservas/:codigo: ese endpoint es de T-8.
+  const fila = d1(
+    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde
+     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
+     WHERE r.codigo = '${reserva.codigo}'`,
   );
-  const r = releida.body?.reserva ?? releida.body;
-  assert.equal(r.modalidad, 'despacho', 'C-23 · la reserva releída debe traer modalidad despacho');
-  assert.equal(
-    r.donde,
-    direccionExacta,
-    `C-23 · la dirección guardada debe ser EXACTA: esperaba ${JSON.stringify(direccionExacta)}, salió ${JSON.stringify(r.donde)}`,
-  );
-
-  // en D1, la fila de la reserva guarda modalidad y direccion exactas
-  const fila = d1(`SELECT modalidad, direccion FROM reservas WHERE codigo = '${reserva.codigo}'`);
   assert.equal(fila.length, 1, 'C-23 · la reserva debe existir en D1 por su código');
-  assert.equal(fila[0].modalidad, 'despacho', "C-23 · en D1 modalidad debe ser 'despacho'");
+  assert.equal(fila[0].modalidad, 'despacho', "C-23 · la reserva releída debe traer modalidad despacho");
   assert.equal(
     fila[0].direccion,
     direccionExacta,
-    `C-23 · en D1 la direccion guardada debe ser exacta, salió ${JSON.stringify(fila[0].direccion)}`,
+    `C-23 · la direccion guardada debe ser EXACTA: esperaba ${JSON.stringify(direccionExacta)}, salió ${JSON.stringify(fila[0].direccion)}`,
+  );
+  assert.equal(
+    fila[0].donde,
+    direccionExacta,
+    `C-23 · con despacho, donde debe ser la dirección guardada, salió ${JSON.stringify(fila[0].donde)}`,
   );
 
   // el cupo bajó exactamente 2 (solo la reserva exitosa, no los rechazos)
@@ -279,21 +272,21 @@ test('C-24 · retiro sin direccion da 201 con donde === referencia_retiro de la 
     `C-24 · donde debe ser la referencia_retiro (${referenciaRetiro}), llegó ${JSON.stringify(reserva.donde)}`,
   );
 
-  // relectura por código: el retiro sigue mostrando la referencia y sin dirección
-  const releida = await leerReserva(reserva.codigo);
-  assert.equal(releida.res.status, 200, `C-24 · la relectura debía dar 200, llegó ${releida.res.status}`);
-  const r = releida.body?.reserva ?? releida.body;
-  assert.equal(r.modalidad, 'retiro', 'C-24 · la reserva releída debe traer modalidad retiro');
-  assert.equal(
-    r.donde,
-    referenciaRetiro,
-    `C-24 · donde releído debe ser la referencia_retiro, llegó ${JSON.stringify(r.donde)}`,
+  // la relectura del dato guardado se hace en D1 (no por
+  // GET /api/reservas/:codigo: ese endpoint es de T-8): retiro guarda
+  // la referencia de retiro derivada y sin direccion.
+  const fila = d1(
+    `SELECT r.modalidad, r.direccion, COALESCE(r.direccion, h.referencia_retiro) AS donde
+     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
+     WHERE r.codigo = '${reserva.codigo}'`,
   );
-
-  // en D1: modalidad retiro y direccion NULL (no la pide)
-  const fila = d1(`SELECT modalidad, direccion FROM reservas WHERE codigo = '${reserva.codigo}'`);
   assert.equal(fila.length, 1, 'C-24 · la reserva debe existir en D1');
-  assert.equal(fila[0].modalidad, 'retiro', "C-24 · en D1 modalidad debe ser 'retiro'");
+  assert.equal(fila[0].modalidad, 'retiro', "C-24 · la reserva releída debe traer modalidad retiro");
+  assert.equal(
+    fila[0].donde,
+    referenciaRetiro,
+    `C-24 · donde releído debe ser la referencia_retiro, salió ${JSON.stringify(fila[0].donde)}`,
+  );
   assert.equal(fila[0].direccion, null, 'C-24 · una reserva de retiro no debe guardar direccion');
 });
 
