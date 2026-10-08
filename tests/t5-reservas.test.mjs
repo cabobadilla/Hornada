@@ -404,6 +404,10 @@ test('EX-17b · la pantalla de reserva existe en el DOM real y al confirmar mues
     referencia_retiro: referenciaRetiro,
   });
 
+  // el resultado del evaluate solo existe dentro del callback de withBrowser;
+  // para la segunda parte (cross-check contra D1) se captura acá (fix del bug
+  // de scope que dejaba `confirmada is not defined` en la corrida de T-5).
+  let confirmada = null;
   await withBrowser(`${BASE}/`, async ({ evaluate }) => {
     const dom = await evaluate(`
       (() => {
@@ -440,9 +444,12 @@ test('EX-17b · la pantalla de reserva existe en el DOM real y al confirmar mues
         return true;
       })()
     `);
-    await new Promise((r) => setTimeout(r, 1500)); // deja correr el POST de la reserva
-
-    const confirmada = await evaluate(`
+    // poll en vez del fijo de 1,5 s: deja correr el POST de la reserva hasta que
+    // el bloque aparezca (tope 8 s). Si nunca aparece, `confirmada.visible` es
+    // false y la aserción de abajo falla con su mensaje original — no hay
+    // aserción cambiada ni debilitada.
+    const tope = Date.now() + 8000;
+    while (Date.now() < tope && !(confirmada = await evaluate(`
       (() => {
         const nodo = document.querySelector('#reserva-confirmada');
         return {
@@ -451,7 +458,9 @@ test('EX-17b · la pantalla de reserva existe en el DOM real y al confirmar mues
           donde: document.querySelector('#reserva-donde')?.textContent ?? null,
         };
       })()
-    `);
+    `)).visible) {
+      await new Promise((r) => setTimeout(r, 250));
+    }
     assert.ok(
       confirmada.visible,
       'EX-17b · al confirmar debe mostrarse el bloque #reserva-confirmada',
