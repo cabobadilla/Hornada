@@ -34,6 +34,38 @@
       <ul id="lista-hornadas" hidden></ul>
     </section>
 
+    <section class="card" aria-labelledby="titulo-reservar">
+      <h2 id="titulo-reservar">Reservar.</h2>
+      <p>Pegá el id de la hornada que querés, cuántas unidades y cómo te encontra­mos. Tu pan queda asegurado antes de que se agote.</p>
+
+      <form id="form-reserva">
+        <label for="campo-reserva-hornada">Hornada: el id de la hornada que vas a reservar.</label>
+        <input id="campo-reserva-hornada" name="hornada_id" type="text" autocomplete="off" placeholder="Pegá el id de la tarjeta de tu sector">
+
+        <label for="campo-reserva-unidades">Unidades: cuántas reservás.</label>
+        <input id="campo-reserva-unidades" name="unidades" type="number" min="1" step="1" value="1">
+
+        <p id="mensaje-total-reserva" class="mensaje" role="status"></p>
+
+        <label for="campo-reserva-nombre">Nombre: cómo te conoce el cocinero.</label>
+        <input id="campo-reserva-nombre" name="nombre" type="text" autocomplete="name" placeholder="Clia, la de la esquina">
+
+        <label for="campo-reserva-contacto">Contacto: dónde te avisa el cocinero.</label>
+        <input id="campo-reserva-contacto" name="contacto" type="text" placeholder="tu@correo.cl o +56 9 ...">
+
+        <button type="submit">Reservar</button>
+      </form>
+
+      <p id="mensaje-reserva" class="mensaje" role="status"></p>
+
+      <div id="reserva-confirmada" hidden>
+        <h3>Reserva confirmada.</h3>
+        <p>Tu código: <strong id="reserva-codigo"></strong></p>
+        <p>Retiro: <span id="reserva-donde"></span></p>
+        <p>Total: $<span id="reserva-total"></span> por <span id="reserva-unidades-confirmadas"></span> unidades.</p>
+      </div>
+    </section>
+
     <section class="card" aria-labelledby="titulo-cocinar">
       <h2 id="titulo-cocinar">Quiero cocinar.</h2>
       <p>Tu horno ya está caliente: regístrate para que los vecinos de tu sector te encuentren.</p>

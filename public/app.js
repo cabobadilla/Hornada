@@ -1,5 +1,6 @@
-async function cocinero() {
-  const form = document.getElementById('form-cocinero');
+let actualizarPrecioReserva = null;
+
+async function cocinero() {  const form = document.getElementById('form-cocinero');
   if (!form) return;
 
   const mensaje = document.getElementById('mensaje-cocinero');
@@ -156,11 +157,24 @@ async function listado() {
     precio.className = 'hornada-precio';
     precio.textContent = `$${h.precio} por unidad`;
 
+    const reservarBtn = document.createElement('button');
+    reservarBtn.type = 'button';
+    reservarBtn.textContent = 'Reservar esta hornada';
+    reservarBtn.addEventListener('click', () => {
+      const form = document.getElementById('form-reserva');
+      if (!form) return;
+      form.hornada_id.value = h.id;
+      if (actualizarPrecioReserva) actualizarPrecioReserva();
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      form.unidades.focus();
+    });
+
     card.appendChild(chip);
     card.appendChild(pan);
     card.appendChild(cocineroL);
     card.appendChild(meta);
     card.appendChild(precio);
+    card.appendChild(reservarBtn);
     return card;
   };
 
@@ -207,8 +221,108 @@ async function listado() {
   }
 }
 
+async function reservar() {
+  const form = document.getElementById('form-reserva');
+  if (!form) return;
+
+  const mensaje = document.getElementById('mensaje-reserva');
+  const mensajeTotal = document.getElementById('mensaje-total-reserva');
+  const confirmada = document.getElementById('reserva-confirmada');
+  const campoHornada = form.hornada_id;
+  let precio = null;
+
+  const pintaTotal = () => {
+    const unidades = Number(form.unidades.value);
+    if (precio != null && Number.isInteger(unidades) && unidades > 0) {
+      mensajeTotal.textContent = `Total estimado: $${unidades * precio} (${unidades} × $${precio}). El total final lo confirma la reserva.`;
+    } else {
+      mensajeTotal.textContent = '';
+    }
+  };
+
+  async function mirarPrecio() {
+    precio = null;
+    pintaTotal();
+    const id = campoHornada.value.trim();
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/hornadas/${encodeURIComponent(id)}`);
+      if (!res.ok) return;
+      const body = await res.json();
+      precio = body?.hornada?.precio ?? null;
+      pintaTotal();
+    } catch {}
+  }
+
+  actualizarPrecioReserva = mirarPrecio;
+  campoHornada.addEventListener('change', mirarPrecio);
+  form.unidades.addEventListener('input', pintaTotal);
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    mensaje.textContent = '';
+    confirmada.hidden = true;
+
+    const id = campoHornada.value.trim();
+    if (!id) {
+      mensaje.textContent = 'Te falta la hornada: pegá el id de la que querés reservar.';
+      campoHornada.focus();
+      return;
+    }
+
+    const datos = {
+      nombre: form.nombre.value.trim(),
+      contacto: form.contacto.value.trim(),
+      unidades: form.unidades.value === '' ? undefined : Number(form.unidades.value),
+      modalidad: 'retiro',
+    };
+
+    try {
+      const res = await fetch(`/api/hornadas/${encodeURIComponent(id)}/reservas`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+      const body = await res.json();
+
+      if (res.status === 201 && body.reserva) {
+        confirmada.hidden = false;
+        document.getElementById('reserva-codigo').textContent = body.reserva.codigo;
+        document.getElementById('reserva-donde').textContent = body.reserva.donde;
+        document.getElementById('reserva-total').textContent = body.reserva.total;
+        document.getElementById('reserva-unidades-confirmadas').textContent = body.reserva.unidades;
+        mensaje.textContent = '';
+        form.reset();
+        mensajeTotal.textContent = '';
+      } else if (body.error === 'falta_nombre') {
+        mensaje.textContent = 'Te falta tu nombre.';
+        form.nombre.focus();
+      } else if (body.error === 'falta_contacto') {
+        mensaje.textContent = 'Te falta tu contacto.';
+        form.contacto.focus();
+      } else if (body.error === 'unidades_invalidas') {
+        mensaje.textContent = 'Las unidades deben ser un número entero mayor a 0.';
+        form.unidades.focus();
+      } else if (body.error === 'sin_cupo') {
+        mensaje.textContent = 'No alcanzó el cupo: alguien reservó antes. Mirá cuántas quedan en la tarjeta.';
+      } else if (body.error === 'hornada_cerrada') {
+        mensaje.textContent = 'Esa hornada ya está cerrada: se agotó o pasó la hora de retiro.';
+      } else if (body.error === 'modalidad_no_ofrecida') {
+        mensaje.textContent = 'Esa hornada no ofrece la modalidad elegida.';
+      } else if (body.error === 'no_existe') {
+        mensaje.textContent = 'Ese id de hornada no existe: revisá la tarjeta de tu sector.';
+        campoHornada.focus();
+      } else {
+        mensaje.textContent = 'No se pudo reservar — pruebe nuevamente.';
+      }
+    } catch {
+      mensaje.textContent = 'No se pudo reservar — pruebe nuevamente.';
+    }
+  });
+}
+
 async function main() {
-  await Promise.all([cocinero(), miHornada(), listado()]);
+  await Promise.all([cocinero(), miHornada(), listado(), reservar()]);
 }
 
 main();

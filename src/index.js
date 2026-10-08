@@ -53,6 +53,11 @@ export default {
       return detalleHornada(env, decodeURIComponent(detalle[1]));
     }
 
+    const reserva = url.pathname.match(/^\/api\/hornadas\/([^/]+)\/reservas$/);
+    if (request.method === 'POST' && reserva) {
+      return reservar(request, env, decodeURIComponent(reserva[1]));
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/hornadas') {
       return listarHornadas(url, env);
     }
@@ -250,4 +255,91 @@ async function detalleHornada(env, id) {
       },
     },
   });
+}
+
+async function reservar(request, env, hornadaId) {
+  let datos = null;
+  try {
+    datos = await request.json();
+  } catch {
+    return json({ error: 'json_invalido' }, 400);
+  }
+  if (!datos || typeof datos !== 'object') {
+    return json({ error: 'json_invalido' }, 400);
+  }
+
+  const nombre = typeof datos.nombre === 'string' ? datos.nombre.trim() : '';
+  if (!nombre) return json({ error: 'falta_nombre' }, 400);
+
+  const contacto = typeof datos.contacto === 'string' ? datos.contacto.trim() : '';
+  if (!contacto) return json({ error: 'falta_contacto' }, 400);
+
+  if (!Number.isInteger(datos.unidades) || datos.unidades <= 0) {
+    return json({ error: 'unidades_invalidas' }, 400);
+  }
+
+  // En T-5 solo retiro: el despacho llega con T-6 (C-22, C-23).
+  const modalidad =
+    typeof datos.modalidad === 'string' && datos.modalidad.trim() ? datos.modalidad.trim() : 'retiro';
+  if (modalidad !== 'retiro') return json({ error: 'modalidad_no_ofrecida' }, 400);
+
+  const direccion =
+    typeof datos.direccion === 'string' && datos.direccion.trim() ? datos.direccion.trim() : null;
+
+  const hornada = await env.DB.prepare(
+    'SELECT id, estado, hasta, precio, referencia_retiro FROM hornadas WHERE id = ?1',
+  )
+    .bind(hornadaId)
+    .first();
+  if (!hornada) return notFound();
+
+  const ahora = new Date().toISOString();
+  if (hornada.estado !== 'abierta' || hornada.hasta <= ahora) {
+    return json({ error: 'hornada_cerrada' }, 409);
+  }
+
+  // La regla del cupo, que es todo el producto (04-DISENO): una sola sentencia
+  // atómica. La base decide, no el Worker: si meta.changes !== 1 → 409 sin_cupo.
+  const cupo = await env.DB.prepare(
+    `UPDATE hornadas SET disponibles = disponibles - ?2, estado = CASE WHEN disponibles - ?2 = 0
+      THEN 'cerrada' ELSE estado END
+     WHERE id = ?1 AND estado = 'abierta' AND disponibles >= ?2`,
+  )
+    .bind(hornadaId, datos.unidades)
+    .run();
+  if (cupo.meta.changes !== 1) return json({ error: 'sin_cupo' }, 409);
+
+  const id = crypto.randomUUID();
+  const codigo = crypto.randomUUID();
+  const total = datos.unidades * hornada.precio;
+  await env.DB.prepare(
+    `INSERT INTO reservas (id, hornada_id, codigo, nombre, contacto, unidades, modalidad, direccion, total, estado, creada_en)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 'reservada', ?10)`,
+  )
+    .bind(
+      id,
+      hornadaId,
+      codigo,
+      nombre,
+      contacto,
+      datos.unidades,
+      modalidad,
+      direccion,
+      total,
+      ahora,
+    )
+    .run();
+
+  return json(
+    {
+      reserva: {
+        codigo,
+        unidades: datos.unidades,
+        total,
+        modalidad,
+        donde: modalidad === 'despacho' ? direccion : hornada.referencia_retiro,
+      },
+    },
+    201,
+  );
 }
