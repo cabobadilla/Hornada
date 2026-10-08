@@ -1,0 +1,33 @@
+{
+  "proyecto": "Hornada",
+  "perfil": "producto",
+  "resumen": "Proyecto recién creado — vacío.",
+  "actualizado": "2026-10-08T12:16:48Z",
+  "ciclo": "Ciclo 1",
+  "etapa": "Etapa 1",
+  "fase_actual": "Idea",
+  "siguiente": "Llenar docs/01-IDEA.md (G0).",
+  "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
+  "gates": {
+    "G0":  {"evaluado": 0, "rechazo": 0},
+    "G1a": {"evaluado": 0, "rechazo": 0},
+    "G1":  {"evaluado": 0, "rechazo": 0},
+    "G2":  {"evaluado": 0, "rechazo": 0},
+    "G3":  {"evaluado": 0, "rechazo": 0},
+    "G4":  {"evaluado": 0, "rechazo": 0},
+    "G5":  {"evaluado": 0, "rechazo": 0}
+  },
+  "casos_ocultos": 0,
+  "fases": [
+    {"id": "idea",     "nombre": "1 · Idea",                  "estado": "pendiente", "gate": "G0",  "resumen": "", "puntos": []},
+    {"id": "analisis", "nombre": "2 · Análisis",              "estado": "pendiente", "gate": "G1a", "resumen": "", "puntos": []},
+    {"id": "def",      "nombre": "3 · Definición",            "estado": "pendiente", "gate": "G1",  "resumen": "", "puntos": []},
+    {"id": "diseno",   "nombre": "4 · Diseño",                "estado": "pendiente", "gate": "G2",  "resumen": "", "puntos": []},
+    {"id": "impl",     "nombre": "5 · Implementación y pruebas", "estado": "pendiente", "gate": "G5", "resumen": "", "puntos": []}
+  ],
+  "tareas": [],
+  "historias": [],
+  "siguientes_ciclos": [],
+  "decisiones": [],
+  "diferido": []
+}
