@@ -175,9 +175,15 @@ test('C-26 · el promedio y la cantidad se derivan en la lectura: 2 reseñas (5 
 
   // El promedio se deriva en la lectura: NINGUNA tabla de D1 lleva columna de
   // promedio ni de suspensión (si tuviera una, se desincronizaría del promedio real).
-  const columnasProhibidas = d1(`SELECT s.name AS tabla, p.name AS col FROM sqlite_master s, pragma_table_info(s.name) p WHERE s.type = 'table' AND s.name NOT LIKE 'sqlite_%' AND (p.name LIKE '%promedio%' OR p.name LIKE '%suspend%' OR p.name LIKE '%media%' OR p.name LIKE '%avg%')`);
+  // Nota: pragma_table_info(...) como tvf da "not authorized: SQLITE_AUTH" en
+  // wrangler d1 execute; el texto CREATE TABLE de sqlite_master declara TODAS las
+  // columnas de cada tabla y es un lectura equivalente, así que se escanea ese sql.
+  const columnasProhibidas = d1(`SELECT name AS tabla, sql AS col FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND (sql LIKE '%promedio%' OR sql LIKE '%suspend%')`);
   assert.deepEqual(columnasProhibidas, [],
     `C-26 · el promedio debe derivarse en la lectura, no estar en D1 como columna: ${JSON.stringify(columnasProhibidas)}`);
+  const tablasSuenan = d1(`SELECT name AS tabla FROM sqlite_master WHERE type = 'table' AND name IN ('cocineros','hornadas','reservas','resenas')`);
+  assert.equal(tablasSuenan.length, 4,
+    `C-26 · guardia del esquema: las 4 tablas del diseño deben existir, llegó: ${JSON.stringify(tablasSuenan)}`);
 });
 
 test('C-27a · 5 reseñas de 1 estrella → fuera del listado del sector y 403 cocinero_suspendido al publicar', async () => {
