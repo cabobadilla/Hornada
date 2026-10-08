@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T22:20:00Z",
+  "actualizado": "2026-10-08T23:10:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Despliegue — app publicada y smoke OK; un caso OCULTO encontró un defecto (suspensión devuelve 409 en vez de 403) → T-9b en curso",
-  "siguiente": "T-9b (403 en la suspensión) → redeploy → re-correr casos ocultos → cierre del ciclo (T-10).",
+  "fase_actual": "CICLO 1 CERRADO — 11/11 tareas · 63/63 tests · smoke 18/18 y ocultos 3/3 contra la URL publicada",
+  "siguiente": "Decisiones del usuario: (1) ¿abrimos el ciclo 2 (pago in-app) o se prueba primero el piloto en Chicureo–Piedra Roja? (2) propuesta de regla para GATES.md sobre tests editados a mitad de tarea.",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -37,8 +37,8 @@
       "estado": "smoke contra la URL publicada: 18/18 OK, incluida una prueba de 8 reservas simultáneas por 1 unidad (1 gana, 7 rechazadas)"
     },
     "G5": {
-      "evaluado": 0,
-      "rechazo": 0
+      "estado": "casos ocultos 3/3 contra la URL publicada",
+      "hallazgos": 1
     }
   },
   "casos_ocultos": 3,
@@ -142,8 +142,8 @@
     {
       "id": "T-10",
       "titulo": "Cierre: suite completa",
-      "estado": "pendiente",
-      "nota": "no implementa nada"
+      "estado": "listo",
+      "nota": "Ejecutada por Hermes (no por el Coder): suite canónica 63/63, smoke de extremo a extremo contra la URL publicada 18/18, casos ocultos 3/3. El QA report está en docs/06-QA-REPORT.md"
     },
     {
       "id": "T-5b",
@@ -257,6 +257,10 @@
     {
       "id": "H-9",
       "nota": "Los casos ocultos pagaron: 2 de 3 pasaron, y el tercero encontró que un cocinero suspendido recibía 409 en vez de 403 al reservarle. La matriz lo declaraba; ningún caso visible cubría ese camino. Un caso oculto no mide al Coder: mide si la matriz era ancha."
+    },
+    {
+      "id": "H-10",
+      "nota": "La auditoría de T-9b encontró 4 validaciones (400 falta_pan/falta_desde/falta_hasta/json_invalido) que el código devolvía y el diseño no declaraba. Se adoptan en el diseño en vez de borrarlas: son correctas."
     }
   ],
   "diferido": [

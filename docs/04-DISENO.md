@@ -74,7 +74,7 @@ Salida:  200 { hornadas: [ { id, pan, desde, hasta, disponibles, precio,
                             referencia_retiro,
                             cocinero: { id, nombre, promedio, resenas } } ] }
          (solo ABIERTAS y no agotadas; orden: `desde` ascendente)   ← C-08, C-09, C-26, C-29
-Errores: 400 { error: 'falta_sector' }
+Errores: 400 { error: 'falta_sector' | 'json_invalido' }
 
 POST /api/hornadas
 Entrada: { cocinero_token, pan, desde, hasta, unidades, precio, modalidades, referencia_retiro }
@@ -82,6 +82,8 @@ Salida:  201 { hornada: { id, unidades, disponibles: unidades, estado: 'abierta'
 Errores: 403 { error: 'token_invalido' | 'cocinero_suspendido' }
          409 { error: 'ya_tiene_hornada_abierta' }   ← C-06
          400 { error: 'unidades_invalidas' | 'precio_invalido' | 'modalidades_invalidas' }  ← C-07
+         400 { error: 'falta_pan' | 'falta_desde' | 'falta_hasta' | 'json_invalido' }
+              (los adoptó la implementación; la auditoría de T-9b los encontró sin declarar)
 
 GET /api/hornadas/:id
 Salida:  200 { hornada: { id, pan, desde, hasta, disponibles, precio, modalidades,
@@ -93,7 +95,7 @@ Entrada: { nombre, contacto, unidades, modalidad, direccion? }
 Salida:  201 { reserva: { codigo, unidades, total, modalidad,
                           donde } }        ← donde = referencia_retiro | direccion
 Errores: 400 { error: 'falta_nombre' | 'falta_contacto' | 'falta_direccion' }  ← C-17, C-23
-         400 { error: 'modalidad_no_ofrecida' }    ← C-22
+         400 { error: 'modalidad_no_ofrecida' | 'json_invalido' }    ← C-22
          409 { error: 'sin_cupo' | 'hornada_cerrada' }  ← C-15, C-16, C-21
          404 { error: 'no_existe' }
 
@@ -112,7 +114,8 @@ Errores: 403 { error: 'token_invalido' }
 POST /api/reservas/:id/entregado
 Entrada: { cocinero_token }
 Salida:  200 { reserva: { id, estado: 'entregada' } }   ← C-19
-Errores: 403 { error: 'token_invalido' | 'no_es_tu_reserva' }
+Errores: 403 { error: 'token_invalido' | 'no_es_tu_reserva' | 'cocinero_suspendido' }
+         400 { error: 'json_invalido' }
          404 { error: 'no_existe' }
 
 POST /api/reservas/:codigo/resena

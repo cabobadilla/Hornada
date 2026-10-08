@@ -23,7 +23,7 @@
   .kpi b{font-size:21px; font-weight:600}
   .kpi span{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em}
   .barra{height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-top:18px}
-  .barra i{display:block; height:100%; background:var(--accent); width:91%}
+  .barra i{display:block; height:100%; background:var(--accent); width:100%}
   h2{font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
      margin:44px 0 6px; font-weight:600}
   .h2sub{color:var(--muted); font-size:13px; margin:0 0 16px; max-width:70ch}
@@ -105,11 +105,11 @@
     <h1>Hornada</h1>
     <p class="sub">Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.</p>
     <div class="meta">
-      <div class="kpi"><b>91%</b><span>Tareas del ciclo</span></div>
-      <div class="kpi"><b>10/11</b><span>Completadas</span></div>
+      <div class="kpi"><b>100%</b><span>Tareas del ciclo</span></div>
+      <div class="kpi"><b>11/11</b><span>Completadas</span></div>
       <div class="kpi"><b>Ciclo 1</b><span>Ciclo activo</span></div>
       <div class="kpi"><b>Etapa 1 · registro de cocineros + pedido de clientes</b><span>Alcance</span></div>
-      <div class="kpi"><b>Despliegue — app publicada y smoke OK; un caso OCULTO encontró un defecto (suspensión devuelve 409 en vez de 403) → T-9b en curso</b><span>Fase actual</span></div>
+      <div class="kpi"><b>CICLO 1 CERRADO — 11/11 tareas · 63/63 tests · smoke 18/18 y ocultos 3/3 contra la URL publicada</b><span>Fase actual</span></div>
     </div>
     <div class="barra"><i></i></div>
   </header>
@@ -193,11 +193,11 @@
       <span class="tk-id">T-9</span>
       <span class="tk-titulo">Reseñas y suspensión</span>
       <span class="tk-nota">C-25 · C-26 · C-27 (con el borde) · C-28 + 1 extra · 56/56 canónico · promedio derivado en la lectura (sin columnas) · 2 mutaciones muerden, la del umbral 5→4 tumba el caso de borde</span>
-    </li><li class="wait">
-      <span class="tk-estado">○</span>
+    </li><li class="ok">
+      <span class="tk-estado">✓</span>
       <span class="tk-id">T-10</span>
       <span class="tk-titulo">Cierre: suite completa</span>
-      <span class="tk-nota">no implementa nada</span>
+      <span class="tk-nota">Ejecutada por Hermes (no por el Coder): suite canónica 63/63, smoke de extremo a extremo contra la URL publicada 18/18, casos ocultos 3/3. El QA report está en docs/06-QA-REPORT.md</span>
     </li><li class="ok">
       <span class="tk-estado">✓</span>
       <span class="tk-id">T-5b</span>
@@ -274,13 +274,13 @@
       </div>
   </div>
 
-  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
+  <h2>Decisiones</h2><div class="caja"><ul><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li><li><strong></strong></li></ul></div>
 
   
 
   <footer>
-    <p><strong>Siguiente:</strong> T-9b (403 en la suspensión) → redeploy → re-correr casos ocultos → cierre del ciclo (T-10).</p>
-    <p>Actualizado 08-10-2026, 7:20 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
+    <p><strong>Siguiente:</strong> Decisiones del usuario: (1) ¿abrimos el ciclo 2 (pago in-app) o se prueba primero el piloto en Chicureo–Piedra Roja? (2) propuesta de regla para GATES.md sobre tests editados a mitad de tarea.</p>
+    <p>Actualizado 08-10-2026, 8:10 p. m. · estado.json es la capa viva; lo escribe Hermes, nunca el Coder.</p>
   </footer>
 
 </div>
