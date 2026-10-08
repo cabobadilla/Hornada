@@ -12,9 +12,7 @@
     {
       "binding": "DB",
       "database_name": "hornada",
-      // database_id de ejemplo: la base remota la crea Hermes al desplegar.
-      // En local (wrangler dev / d1 --local) no se usa.
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "71c4a6d4-1346-40ab-9883-a6aecf8eb9bb"
     }
   ]
 }

@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T21:00:00Z",
+  "actualizado": "2026-10-08T22:20:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — 9 de 11 tareas; suite 56/56 · T-4 (forma) en curso",
-  "siguiente": "T-4 (forma del listado, medida por CDP) → T-10 (cierre: suite completa, smoke contra la URL publicada y casos ocultos).",
+  "fase_actual": "Despliegue — app publicada y smoke OK; un caso OCULTO encontró un defecto (suspensión devuelve 409 en vez de 403) → T-9b en curso",
+  "siguiente": "T-9b (403 en la suspensión) → redeploy → re-correr casos ocultos → cierre del ciclo (T-10).",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,12 +30,11 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 9,
+      "evaluado": 10,
       "rechazo": 1
     },
     "G4": {
-      "evaluado": 0,
-      "rechazo": 0
+      "estado": "smoke contra la URL publicada: 18/18 OK, incluida una prueba de 8 reservas simultáneas por 1 unidad (1 gana, 7 rechazadas)"
     },
     "G5": {
       "evaluado": 0,
@@ -107,8 +106,8 @@
     {
       "id": "T-4",
       "titulo": "La forma del listado (medición)",
-      "estado": "en-curso",
-      "nota": "C-10 · C-11 · C-12 · C-13 · va al final"
+      "estado": "listo",
+      "nota": "C-10 · C-11 · C-12 · C-13 + 1 extra · 61/61 · 2 mutaciones muerden (una mide el contraste real) · implementación: una línea de CSS"
     },
     {
       "id": "T-5",
@@ -254,6 +253,10 @@
     {
       "id": "H-8",
       "nota": "Fragilidad conocida del arnés de tests: si una corrida muere por 'turno roto' del lock (tras matar un wrangler a mano), el rojo es del arnés, no del entregable. Mirar el lock antes de acusar al código."
+    },
+    {
+      "id": "H-9",
+      "nota": "Los casos ocultos pagaron: 2 de 3 pasaron, y el tercero encontró que un cocinero suspendido recibía 409 en vez de 403 al reservarle. La matriz lo declaraba; ningún caso visible cubría ese camino. Un caso oculto no mide al Coder: mide si la matriz era ancha."
     }
   ],
   "diferido": [
@@ -265,5 +268,11 @@
     "Mapas y geolocalización",
     "App nativa",
     "Panel de administración"
-  ]
+  ],
+  "despliegue": {
+    "url": "https://hornada.mkvs.workers.dev",
+    "d1": "hornada · 71c4a6d4-1346-40ab-9883-a6aecf8eb9bb",
+    "migraciones": "0001_init aplicada en remoto",
+    "desplegado": "2026-10-08"
+  }
 }

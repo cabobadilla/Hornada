@@ -1,0 +1,24 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-4",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa",
+  "commits": [
+    "6f986a8 test(T-4) en ROJO (solo C-12 fallaba: botón 202,6 px vs 298 px internos)",
+    "6bffcf8 implement(T-4): una regla CSS (.card-hornada button en bloque y ancho 100%)"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "proceso": "Correcto: tests en su commit, implementación aparte, sin tocar archivos sellados, árbol limpio.",
+  "verificacion_de_hermes": {
+    "sello": "seal-from-commit 6f986a8 + verify → INTACTOS",
+    "verde_canonico": "node --test tests/ (sin flags) → 61/61",
+    "mutacion": [
+      "quitar la regla del botón → C-12 rojo",
+      "aclarar el gris secundario (#5a534a → #b9b2a9) → C-13 rojo: el contraste se mide de verdad, no se declara"
+    ],
+    "mediciones_del_coder": "C-10 left 29=29 px · C-11 chip 14=14 px arriba y a la derecha · C-12 botón 298 vs 298 px internos, alto 44 px · C-13 7,58:1 (meta) y 7,09:1 (chip) vs ≥ 4,5:1"
+  }
+}
