@@ -353,3 +353,21 @@ comando: node --test tests/t5-reservas.test.mjs
 # Note: tests 46 = 39 previos + 7 de T-7 (44 decados era 39 + 3 + 2; los 2 extras
 # son el de 404 y el del DOM, y C-18b se partió del C-18 — todos a 200/falli-none).
 # ------------------------------------------------------------
+
+# ---------------- T-8 (HU-6 · C-20) · GREEN ----------------
+node --test tests/ (sin flags) -> tests 49 / pass 49 / fail 0, exit code 0
+# Corridas: verde 49/49 en corrida-a (.tmp/green-t8.txt) y corrida-c (.tmp/green-t8-c.txt).
+# Una corrida intermedia (.tmp/green-t8-b.txt) murió en "turnos roto" (lock.mjs):
+# resquicio de arranque tras matar un wrangler a mano, reproducible sin tocar
+# código; la corrida limpia siguiente quedó 49/49.
+# Casos nuevos en tests/t8-mi-reserva.test.mjs (serialización abrirTurno/cerrarTurno):
+#   C-20  GET /api/reservas/:codigo (codigo real, despacho) -> 200 con estado
+#         reservada, unidades 3, modalidad despacho, donde = direccion del
+#         cliente, total 3600 y hornada {pan, desde, hasta} de SU hornada;
+#         codigo inexistente -> 404 no_existe sin filtrar datos de otras reservas
+#   C-20b tras POST /api/reservas/:id/entregado (T-7, token del cocinero), la
+#         relectura por codigo muestra estado: entregada
+#   EX-T8 pantalla #mi-reserva en el DOM real (Chrome headless), abierta con
+#         ?codigo=, muestra estado, unidades, total (2400), donde y el pan
+# Commit de tests (RED): 8b0b4fb — no se tocaron después.
+# -------------------------------------------------------------

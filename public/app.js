@@ -360,8 +360,56 @@ async function reservar() {
 }
 
 async function main() {
-  await Promise.all([cocinero(), miHornada(), listado(), reservar()]);
+  await Promise.all([cocinero(), miHornada(), listado(), reservar(), miReserva()]);
   await panelCocinero();
+}
+
+// T-8 (HU-6): el cliente sigue su reserva — la pantalla #mi-reserva se abre con
+// el código por query string (`/?codigo=…`) y muestra estado, unidades, total,
+// dónde retira y los datos de su hornada (C-20).
+async function miReserva() {
+  const seccion = document.getElementById('mi-reserva');
+  if (!seccion) return;
+
+  const contenido = document.getElementById('mi-reserva-contenido');
+  const mensaje = document.getElementById('mensaje-mi-reserva');
+
+  const horario = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : d.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+  };
+
+  const codigo = new URLSearchParams(location.search).get('codigo');
+  if (!codigo || !codigo.trim()) return;
+  seccion.style.display = '';
+
+  try {
+    const res = await fetch(`/api/reservas/${encodeURIComponent(codigo.trim())}`);
+    const body = await res.json();
+    if (res.status === 200 && body?.reserva) {
+      const r = body.reserva;
+      contenido.textContent = '';
+      const estado = document.createElement('p');
+      estado.className = 'mi-reserva-estado';
+      estado.textContent = `Estado: ${r.estado}`;
+      const pedido = document.createElement('p');
+      pedido.className = 'mi-reserva-pedido';
+      pedido.textContent = `${r.hornada?.pan ?? ''} · ${r.unidades} unidades · total $${r.total} · ${r.modalidad}`;
+      const dondeL = document.createElement('p');
+      dondeL.className = 'mi-reserva-donde';
+      dondeL.textContent = r.modalidad === 'despacho' ? `Entrega en: ${r.donde}` : `Retiro en: ${r.donde}`;
+      const ventana = document.createElement('p');
+      ventana.className = 'mi-reserva-ventana';
+      ventana.textContent = r.hornada ? `Sale del horno ${horario(r.hornada.desde)} · retiro hasta ${horario(r.hornada.hasta)}` : '';
+      contenido.append(estado, pedido, dondeL, ventana);
+    } else if (body?.error === 'no_existe') {
+      mensaje.textContent = 'Ese código de reserva no existe: revisá el que te dio la confirmación.';
+    } else {
+      mensaje.textContent = 'No se pudo cargar tu reserva — pruebe nuevamente.';
+    }
+  } catch {
+    mensaje.textContent = 'No se pudo cargar tu reserva — pruebe nuevamente.';
+  }
 }
 
 // T-7 (HU-5): el panel del cocinero se abre con el token — por query string

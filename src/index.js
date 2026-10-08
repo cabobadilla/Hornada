@@ -67,6 +67,12 @@ export default {
       return miPanel(url, env);
     }
 
+    // T-8 (HU-6): el cliente sigue su reserva por su código (C-20).
+    const seguir = url.pathname.match(/^\/api\/reservas\/([^/]+)$/);
+    if (request.method === 'GET' && seguir) {
+      return consultarReserva(env, decodeURIComponent(seguir[1]));
+    }
+
     // T-7 (HU-5): marcar un pedido entregado — persiste en D1 (C-19).
     const entregado = url.pathname.match(/^\/api\/reservas\/([^/]+)\/entregado$/);
     if (request.method === 'POST' && entregado) {
@@ -474,4 +480,41 @@ async function marcarEntregado(request, env, reservaId) {
   await env.DB.prepare(`UPDATE reservas SET estado = 'entregada' WHERE id = ?`).bind(reservaId).run();
 
   return json({ reserva: { id: fila.id, estado: 'entregada' } }, 200);
+}
+
+// T-8 (HU-6, C-20): el cliente consulta SU reserva por el código que le devolvió
+// T-5 — con su estado, unidades, modalidad, dónde retira y los datos de su
+// hornada. Un código inexistente da 404 no_existe y no filtra datos ajenos.
+async function consultarReserva(env, codigo) {
+  const fila = await env.DB.prepare(
+    `SELECT r.id, r.estado, r.unidades, r.modalidad, r.direccion, r.total,
+            h.pan, h.desde, h.hasta, h.referencia_retiro,
+            (SELECT COUNT(*) FROM resenas rn WHERE rn.reserva_id = r.id) AS resenas_reserva
+     FROM reservas r JOIN hornadas h ON h.id = r.hornada_id
+     WHERE r.codigo = ?1`,
+  )
+    .bind(codigo)
+    .first();
+
+  if (!fila) return notFound();
+
+  const donde = fila.modalidad === 'despacho' ? fila.direccion : fila.referencia_retiro;
+
+  return json({
+    reserva: {
+      estado: fila.estado,
+      unidades: fila.unidades,
+      total: fila.total,
+      modalidad: fila.modalidad,
+      donde,
+      // C-25 (es de T-9, se declara por el diseño): puede calificar solo si el
+      // pan ya se entregó y esa reserva aún no tiene reseña.
+      puede_calificar: fila.estado === 'entregada' && Number(fila.resenas_reserva) === 0,
+      hornada: {
+        pan: fila.pan,
+        desde: fila.desde,
+        hasta: fila.hasta,
+      },
+    },
+  });
 }
