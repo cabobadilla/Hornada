@@ -44,18 +44,24 @@ case "$MODE" in
     #
     # Un RED válido = la suite FALLA en el commit de tests.
     # Si PASA, o el RED es falso, o los tests no prueban nada que falte.
+    #
+    # El worktree va FUERA del proyecto (v0.38, aprendizaje #73): dentro de él, los
+    # helpers con rutas relativas (`../../wrangler.jsonc`) escapan al árbol VIVO y la
+    # suite "pasa" en el commit de tests — un falso verde que esta guardia imprimía
+    # como "✅ RED válido". Una guardia que corre dentro de lo que verifica se
+    # esquiva con cualquier ruta relativa.
     COMMIT="${3:-}"
     [ -z "$COMMIT" ] && { echo "uso: freeze-tests.sh verify-red <proyecto> <commit-de-tests>" >&2; exit 1; }
     cd "$PROJECT_DIR" || exit 1
-    WT="$PROJECT_DIR/.tmp/.red-check"
-    rm -rf "$WT"
+    WT="$(mktemp -d "${TMPDIR:-/tmp}/red-check-XXXXXX")"
+    rmdir "$WT" 2>/dev/null || true
     if ! git worktree add --detach "$WT" "$COMMIT" >/dev/null 2>&1; then
       echo "No se pudo preparar el worktree en $COMMIT" >&2; exit 1
     fi
-    ( cd "$WT" && node --test tests/ 2>&1 ); RED_RC=$?
-    OUT=$( cd "$WT" && node --test tests/ 2>&1 )
-    rm -rf "$WT"; git worktree prune >/dev/null 2>&1
-    echo "── RED REAL (reproducido en $COMMIT) ──"
+    OUT="$( cd "$WT" && node --test tests/ 2>&1 )"; RED_RC=$?
+    git worktree remove --force "$WT" >/dev/null 2>&1 || rm -rf "$WT"
+    git worktree prune >/dev/null 2>&1
+    echo "── RED REAL (reproducido en $COMMIT, fuera del proyecto) ──"
     if [ "$RED_RC" -eq 0 ]; then
       echo "❌ El RED es FALSO: la suite PASA en el commit de tests."
       echo "   Si los tests pasan sin implementación, no prueban la implementación."
@@ -65,14 +71,24 @@ case "$MODE" in
     # Fallar NO alcanza: la regla del harness es que falle PORQUE FALTA LA
     # IMPLEMENTACIÓN, no porque el test esté roto. Un `readFileSync` que revienta
     # da exit!=0 y no verifica NINGÚN caso: la suite no llega ni a evaluarlos.
-    if printf '%s' "$OUT" | grep -qE 'ENOENT|Cannot find module|ERR_MODULE_NOT_FOUND|SyntaxError'; then
-      echo "❌ El RED es INVÁLIDO: la suite no falla una aserción, REVIENTA al cargar."
+    #
+    # El detector cubre TAMBIÉN los errores de tiempo de ejecución (aprendizaje #74):
+    # `ReferenceError` por un typo en un helper hacía fallar DOS casos por crash y
+    # dejaba a los otros cinco fallando por aserción — el promedio parecía un RED
+    # legítimo. Un caso que muere por un typo no verifica su observable.
+    if printf '%s' "$OUT" | grep -qE 'ENOENT|Cannot find module|ERR_MODULE_NOT_FOUND|SyntaxError|ReferenceError|TypeError|RangeError'; then
+      echo "❌ El RED es INVÁLIDO: hay casos que NO fallan por aserción, sino por error."
       if printf '%s' "$OUT" | grep -qE 'ENOENT'; then
         echo "   El artefacto no existe todavía y el test lo lee en el import: el"
         echo "   archivo entero falla de una. Eso no verifica los casos — los saltea."
       fi
+      if printf '%s' "$OUT" | grep -qE 'ReferenceError|TypeError|RangeError'; then
+        echo "   Hay un error de tiempo de ejecución en la suite (typo, variable sin"
+        echo "   definir): ese caso NUNCA llegó a evaluar su observable."
+      fi
       echo "   Un RED válido falla caso por caso, con la aserción en el mensaje."
       echo "   Corrida INVÁLIDA — rehacer los tests."
+      printf '%s' "$OUT" | grep -E 'ReferenceError|TypeError|RangeError|ENOENT|Cannot find module' | head -3 | sed 's/^/      /'
       exit 1
     fi
     echo "✅ RED válido: falla por aserción en el commit de tests (exit $RED_RC)."
