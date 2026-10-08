@@ -1,6 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { startServer, stopServer, serverReady, api, apiJson, d1, withBrowser, BASE } from './helpers.mjs';
 
 // --- serialización propia de este archivo (helpers.mjs sellado no se toca) ---
@@ -37,22 +38,66 @@ function otraSuiteViva() {
 }
 
 before(async () => {
-  // Fase 1 · ventanal de 10 s: si una suite vecina aparece, se marca y se espera.
-  let visto = null;
-  for (let i = 0; i < 20 && !visto; i++) {
-    visto = otraSuiteViva();
-    if (visto) break;
+  // Serialización robusta (helpers.mjs sellado no se toca). Punto débil del
+  // esquema "todos esperamos": al morir la suite no-esperadora, las suites
+  // esperadoras despertamos JUNTAS y compartimos el workerd de quien gane el
+  // puerto (el otro crée que el.server ajeno es el suyo; al terminarse aquel,
+  // ECONNREFUSED). Acá el despertar es en tres fases:
+  //   1. esperar a que no haya ninguna suite vecina viva (cap 20 min);
+  //   2. gracia de 15 s sondeando cada 250 ms: si reaparece un vecino o el
+  //      puerto 8787 pasa a estar ocupado, se vuelve a esperar;
+  //   3. en estado callado, matar cualquier server huérfano en 8787
+  //      (restos de una corrida interrumpida) y recién entonces arrancar.
+  for (let ronda = 0; ronda < 2900; ronda++) {
+    const vecina = otraSuiteViva();
+    if (!vecina) {
+      let callado = true;
+      for (let i = 0; i < 60; i++) {
+        if (otraSuiteViva()) { callado = false; break; }
+        if (i % 4 === 0 && !(await puertoLibre())) { callado = false; break; }
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      if (callado) break;
+    }
     await new Promise((r) => setTimeout(r, 500));
   }
-  // Fase 2 · tope de 20 min: si una suite vecina no termina, se corre igual y los
-  // fallos cuentan su propia historia (quick-fail por ECONNREFUSED, no falso verde).
-  for (let i = 0; visto && i < 2400; i++) {
-    if (!otraSuiteViva()) break;
-    await new Promise((r) => setTimeout(r, 500));
-  }
+  matarServerHuerfano();
   await startServer();
 });
 after(stopServer);
+
+async function puertoLibre() {
+  try {
+    await fetch(`${BASE}/`, { signal: AbortSignal.timeout(800) });
+    return false;
+  } catch (e) {
+    return e?.cause?.code === 'ECONNREFUSED';
+  }
+}
+
+function matarServerHuerfano() {
+  let out = '';
+  try {
+    out = execSync('lsof -t -iTCP:8787 -sTCP:LISTEN 2>/dev/null || true', { encoding: 'utf8' });
+  } catch {
+    return;
+  }
+  const pids = out.split('\n').map((s) => parseInt(s, 10)).filter(Boolean);
+  for (const pid of pids) {
+    try { process.kill(pid, 'SIGTERM'); } catch {}
+  }
+  // da 3 s a que se retiren; si siguen, SIGKILL
+  const alive = () =>
+    out.split('\n').map((s) => parseInt(s, 10)).filter(Boolean).filter((pid) => {
+      try { process.kill(pid, 0); return true; } catch { return false; }
+    });
+  for (let i = 0; i < 6 && alive().length > 0; i++) {
+    execSync('sleep 0.5');
+  }
+  for (const pid of alive()) {
+    try { process.kill(pid, 'SIGKILL'); } catch {}
+  }
+}
 
 // ---- helpers propios de T-3 (los helpers sellados no se tocan) ----
 
@@ -104,6 +149,23 @@ async function listar(sector) {
 
 async function listarRaw(path) {
   return apiJson(path.startsWith('/api/hornadas') ? path : `/api/hornadas${path}`);
+}
+
+// `wrangler d1 execute --command …` admite UNA sola sentencia por invocación;
+// para sembrar varias filas usa --file con múltiples INSERTs (esto NO toca
+// helpers.mjs: es una helper propia de este archivo).
+function d1Lote(stmts) {
+  const archivoSql = new URL('../.tmp/t3-data.sql', import.meta.url).pathname;
+  mkdirSync(new URL('../.tmp/', import.meta.url).pathname, { recursive: true });
+  writeFileSync(archivoSql, stmts.join('\n'), 'utf8');
+  const out = execSync(
+    `npx wrangler d1 execute hornada --local --file "${archivoSql}" --json`,
+    { cwd: RAIZ, encoding: 'utf8', timeout: 90_000 },
+  );
+  const parsed = JSON.parse(out);
+  const filas = parsed.flatMap((r) => r.results ?? []);
+  if (!filas[0] || !filas[0].error) return filas;
+  throw new Error(`d1Lote falló: ${JSON.stringify(filas)}`);
 }
 
 // ============================================================
@@ -177,20 +239,25 @@ test('EX-08b · el listado devuelve como máximo 50 filas (límite del presupues
   assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo');
   const marca = `masa50-${Date.now()}`;
   // Inserta 55 hornadas abiertas del mismo sector directamente por D1 (para no
-  // chocar con la regla de una hornada abierta por cocinero) ligadas a un solo
-  // cocinero creado por API (todos sus cocineros apuntan al mismo sector vacío).
+  // chocar con la regla de una hornada abierta por cocinero): INSERT condicional
+  // idempotente (no hay UNIQUE sobre id aquí — usar WHERE NOT EXISTS).
   const c = await cocineroNuevo('ex08b', `sector-ex08b-${Date.now()}`);
   const cocineroId = d1(`SELECT id FROM cocineros WHERE token = '${c.token}'`)[0].id;
   const stmts = [];
   for (let i = 0; i < 55; i++) {
     const id = `ex08b-${marca}-${String(i).padStart(3, '0')}`;
-    stmts.push(`INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)
-      VALUES ('${id}', '${cocineroId}', 'Pan límite ${i}', '${iso(600 + i)}', '${iso(1200 + i)}', 10, 10, 500, 'retiro', 'Ref ${i}', 'abierta', '${new Date().toISOString()}');`);
+    const ahora = new Date().toISOString();
+    stmts.push(
+      `INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)\n` +
+        `SELECT '${id}', '${cocineroId}', 'Pan límite ${i}', '${iso(600 + i)}', '${iso(1200 + i)}', 10, 10, 500, 'retiro', 'Ref ${i}', 'abierta', '${ahora}'\n` +
+        `WHERE NOT EXISTS (SELECT 1 FROM hornadas WHERE id = '${id}');`,
+    );
   }
-  execSync(
-    `npx wrangler d1 execute hornada --local --command ${JSON.stringify(stmts.join('\n'))}`,
-    { cwd: RAIZ, encoding: 'utf8', timeout: 90_000, stdio: 'ignore' },
-  );
+  const resultados = d1Lote(stmts);
+  const cambios = stmts.length - resultados.length;
+  assert.equal(cambios, 55, `EX-08b · la siembra debe insertar 55 hornadas, cambió la cantidad: hay ${resultados.length} restantes de ${stmts.length}`);
+  const sembradas = d1(`SELECT COUNT(*) AS n FROM hornadas WHERE id LIKE 'ex08b-${marca}-%';`);
+  assert.equal(Number(sembradas[0].n), 55, `EX-08b · la siembra debe quedar en D1, hay ${Number(sembradas[0].n)}`);
 
   const { res, body } = await listar(c.sector);
   assert.equal(res.status, 200, `EX-08b · esperaba 200, llegó ${res.status}`);
@@ -224,18 +291,24 @@ test('C-09 · sin cupo (disponibles = 0), con hasta en el pasado o estado cerrad
   const idVencida = `c09-vencida-${Date.now()}`;
   const idCerrada = `c09-cerrada-${Date.now()}`;
   const cocineroId = d1(`SELECT id FROM cocineros WHERE token = '${c.token}'`)[0].id;
-  const stmts = [
-    `INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)
-      VALUES ('${idAgotada}', '${cocineroId}', 'Pan agotado', '${iso(-240)}', '${iso(240)}', 20, 0, 1000, 'retiro,despacho', 'Ref agotada', 'abierta', '${new Date().toISOString()}');`,
-    `INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)
-      VALUES ('${idVencida}', '${cocineroId}', 'Pan vencido', '${iso(-240)}', '${iso(-60)}', 20, 20, 1000, 'retiro,despacho', 'Ref vencida', 'abierta', '${new Date().toISOString()}');`,
-    `INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)
-      VALUES ('${idCerrada}', '${cocineroId}', 'Pan cerrado', '${iso(60)}', '${iso(240)}', 20, 20, 1000, 'retiro,despacho', 'Ref cerrada', 'cerrada', '${new Date().toISOString()}');`,
-  ];
-  execSync(
-    `npx wrangler d1 execute hornada --local --command ${JSON.stringify(stmts.join('\n'))}`,
-    { cwd: RAIZ, encoding: 'utf8', timeout: 90_000, stdio: 'ignore' },
-  );
+  const stmts = [];
+  for (const [id, pan, desde, hasta, disponibles, estado] of [
+    [idAgotada, 'Pan agotado', iso(-240), iso(240), 0, 'abierta'],
+    [idVencida, 'Pan vencido', iso(-240), iso(-60), 20, 'abierta'],
+    [idCerrada, 'Pan cerrado', iso(60), iso(240), 20, 'cerrada'],
+  ]) {
+    stmts.push(
+      `INSERT INTO hornadas (id, cocinero_id, pan, desde, hasta, unidades, disponibles, precio, modalidades, referencia_retiro, estado, creada_en)\n` +
+        `SELECT '${id}', '${cocineroId}', '${pan}', '${desde}', '${hasta}', 20, ${disponibles}, 1000, 'retiro,despacho', 'Ref ${pan}', '${estado}', '${new Date().toISOString()}'\n` +
+        `WHERE NOT EXISTS (SELECT 1 FROM hornadas WHERE id = '${id}');`,
+    );
+  }
+  const resultados = d1Lote(stmts);
+  if (resultados.length !== 0) {
+    throw new Error(`C-09 · la siembra no debe dejar filas, quedaron ${resultados.length}`);
+  }
+  const sembradas = d1(`SELECT id FROM hornadas WHERE id = '${idAgotada}' OR id = '${idVencida}' OR id = '${idCerrada}';`);
+  assert.equal(sembradas.length, 3, `C-09 · las 3 hornadas sembradas deben estar en D1, hay ${sembradas.length}`);
 
   const { res, body } = await listar(SECTOR);
   assert.equal(res.status, 200, `C-09 · esperaba 200, llegó ${res.status}`);

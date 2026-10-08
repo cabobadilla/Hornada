@@ -53,9 +53,52 @@ export default {
       return detalleHornada(env, decodeURIComponent(detalle[1]));
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/hornadas') {
+      return listarHornadas(url, env);
+    }
+
     return notFound();
   },
 };
+
+async function listarHornadas(url, env) {
+  const sector = (url.searchParams.get('sector') ?? '').trim();
+  if (!sector) return json({ error: 'falta_sector' }, 400);
+
+  const ahoraISO = new Date().toISOString();
+  const filas = await env.DB.prepare(
+    `SELECT h.id, h.pan, h.desde, h.hasta, h.disponibles, h.precio,
+            h.modalidades, h.referencia_retiro,
+            c.id AS cocinero_id, c.nombre AS cocinero_nombre,
+            (SELECT COUNT(*) FROM resenas r WHERE r.cocinero_id = c.id) AS resenas,
+            (SELECT AVG(r.estrellas) FROM resenas r WHERE r.cocinero_id = c.id) AS promedio
+     FROM hornadas h JOIN cocineros c ON c.id = h.cocinero_id
+     WHERE c.sector = ?1 AND h.estado = 'abierta' AND h.disponibles > 0 AND h.hasta > ?2
+     ORDER BY h.desde ASC
+     LIMIT 50`,
+  )
+    .bind(sector, ahoraISO)
+    .all();
+
+  return json({
+    hornadas: (filas.results ?? []).map((f) => ({
+      id: f.id,
+      pan: f.pan,
+      desde: f.desde,
+      hasta: f.hasta,
+      disponibles: f.disponibles,
+      precio: f.precio,
+      modalidades: String(f.modalidades).split(',').filter(Boolean),
+      referencia_retiro: f.referencia_retiro,
+      cocinero: {
+        id: f.cocinero_id,
+        nombre: f.cocinero_nombre,
+        promedio: f.promedio === null ? null : Number(f.promedio),
+        resenas: f.resenas,
+      },
+    })),
+  });
+}
 
 async function registrarCocinero(request, env) {
   let datos = null;
