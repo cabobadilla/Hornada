@@ -1,0 +1,30 @@
+{
+  "ciclo": "Ciclo 1",
+  "tarea": "T-6",
+  "modelo": "opencode-go/glm-5.3-flash",
+  "fecha": "2026-10-08",
+  "desenlace": "completa_con_desviacion_benigna",
+  "commits": [
+    "c7041af test(T-6) en ROJO",
+    "268a643 test(T-6): C-23/C-24 releen de D1 (no del endpoint de T-8)",
+    "e8e003f implement(T-6): modalidad elegible + pantalla"
+  ],
+  "tokens": null,
+  "costo_usd": null,
+  "nota_de_costo": "opencode run no reportó tokens ni costo; no se estima (§5).",
+  "desviacion": {
+    "que": "El Coder volvió a tocar su archivo de tests DESPUÉS de su commit de tests, dentro del commit de implementación e8e003f (−6/+2 líneas en tests/t6-modalidad.test.mjs), y lo declaró por su cuenta.",
+    "que_cambio": "Solo el formato del SQL: consultas multilínea dentro de un template literal pasaron a una sola línea, porque el helper sellado `d1()` es execSync + shell y rompía con salto de línea. Las aserciones quedaron byte a byte idénticas (modalidad, dirección exacta, donde).",
+    "veredicto": "Benigna y verificada por mí con el diff: cero cambios de exigencia. Se acepta con la desviación registrada. Segunda vez en el ciclo: el patrón es del proceso (el Coder arregla lo último en el commit que ya tenía), no del azar.",
+    "accion": "Sello re-anclado en e8e003f (el estado de tests verificado). Vale la regla: si hay que tocar un test, va en un commit de tests PROPIO, aunque sea una línea — así el sello puede saber qué es contrato y qué es implementación."
+  },
+  "verificacion_de_hermes": {
+    "sello": "INTACTOS tras re-anclar",
+    "verde_canonico": "node --test tests/ (sin flags) 3/3 corridas: 39 / 39 / 0 en las tres",
+    "mutacion": [
+      "aceptar cualquier modalidad → C-22 rojo",
+      "donde = referencia siempre (ignorar el despacho) → C-23 rojo"
+    ],
+    "nota_de_helper": "Hallazgo para el harness: el helper sellado `d1()` es execSync+shell y no acepta SQL multilínea. Es una restricción real del arnés de tests, no del entregable."
+  }
+}

@@ -2,11 +2,11 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T17:00:00Z",
+  "actualizado": "2026-10-08T18:10:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
-  "fase_actual": "Implementación — suite canónica verde (34/34, 3/3 corridas); T-6 en curso",
-  "siguiente": "T-6 (retiro o despacho) → T-7 (panel) → T-8 → T-9 → T-4 (forma) → T-10.",
+  "fase_actual": "Implementación — 6 de 10 tareas; suite 39/39 tres veces · T-7 en curso",
+  "siguiente": "T-7 (panel del cocinero) → T-8 → T-9 → T-4 (forma) → T-10 (suite completa).",
   "nota_de_proceso": "estado.json es la capa viva; lo escribe Hermes, nunca el Coder.",
   "urls": {
     "tablero": "https://cabobadilla.github.io/Hornada/progreso.html",
@@ -30,7 +30,7 @@
       "rechazo": 0
     },
     "G3": {
-      "evaluado": 4,
+      "evaluado": 6,
       "rechazo": 1
     },
     "G4": {
@@ -119,13 +119,13 @@
     {
       "id": "T-6",
       "titulo": "Retiro o despacho",
-      "estado": "en-curso",
-      "nota": "C-22 · C-23 · C-24"
+      "estado": "listo",
+      "nota": "C-22 · C-23 · C-24 + 2 extras · cupo intacto tras cada rechazo · 2 mutaciones muerden · DESVIACIÓN benigna declarada: reformateó un SQL en su test dentro del commit de implementación"
     },
     {
       "id": "T-7",
       "titulo": "El panel del cocinero",
-      "estado": "pendiente",
+      "estado": "en-curso",
       "nota": "C-18 · C-19"
     },
     {
@@ -246,6 +246,10 @@
     {
       "id": "H-6",
       "nota": "C-23 mezclaba dos superficies: la validación (T-6) y que el cocinero VEA la dirección (panel, T-7). Se partió: T-6 valida y persiste; T-7 verifica que el panel la muestre. Una tarea no puede depender de una superficie que todavía no existe."
+    },
+    {
+      "id": "H-7",
+      "nota": "Tocar un test, aunque sea una línea, va en un commit de tests propio: es lo que permite al sello distinguir contrato de implementación."
     }
   ],
   "diferido": [
