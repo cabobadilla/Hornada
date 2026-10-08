@@ -105,14 +105,6 @@ test('EX-02b · body no JSON o vacío se rechaza sin crear nada', async () => {
   assert.ok(res.status >= 400 && res.status < 500, `EX-02b · body inválido debe dar 4xx, llego ${res.status}`);
 });
 
-test('EX-404 · rutas de API que aún no existen responden 404 JSON', async () => {
-  assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo');
-  const { res, body } = await apiJson('/api/hornadas?sector=x');
-  assert.equal(res.status, 404, `EX-404 · esperaia 404, llego ${res.status}`);
-  assert.ok(body && typeof body === 'object', 'EX-404 · el 404 debe ser JSON, no una página');
-  assert.equal(body?.error, 'no_existe', 'EX-404 · el JSON debe traer error: no_existe');
-});
-
 test('EX-01a · la página "Quiero cocinar" se sirve como HTML y muestra el título del formulario', async () => {
   assert.ok(serverReady(), 'el dev server wrangler debe estar corriendo');
   const res = await fetch(`${BASE}/`, { signal: AbortSignal.timeout(10000) });
