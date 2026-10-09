@@ -2,7 +2,7 @@
   "proyecto": "Hornada",
   "perfil": "producto",
   "resumen": "Pan de barrio: cocineros vecinos publican su hornada y los clientes del mismo sector la reservan y la retiran en persona. Ciclo 1 sin pago y sin delivery.",
-  "actualizado": "2026-10-08T23:10:00Z",
+  "actualizado": "2026-10-09T00:05:00Z",
   "ciclo": "Ciclo 1",
   "etapa": "Etapa 1 · registro de cocineros + pedido de clientes",
   "fase_actual": "CICLO 1 CERRADO — 11/11 tareas · 63/63 tests · smoke 18/18 y ocultos 3/3 contra la URL publicada",
@@ -278,5 +278,17 @@
     "d1": "hornada · 71c4a6d4-1346-40ab-9883-a6aecf8eb9bb",
     "migraciones": "0001_init aplicada en remoto",
     "desplegado": "2026-10-08"
+  },
+  "costo_del_ciclo": {
+    "medido_con": "opencode stats --days 1",
+    "sesiones": 13,
+    "mensajes": 657,
+    "costo_usd": 1.99,
+    "tokens": {
+      "entrada": "3.0M",
+      "salida": "254.8K",
+      "cache_leida": "44.1M"
+    },
+    "nota": "agregado del día, NO atribuible despacho por despacho: los 13 docs/corridas/*.json quedaron con costo_usd null (antes de la regla v0.39). En el próximo ciclo se registra el delta por corrida."
   }
 }
